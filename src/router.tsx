@@ -1,5 +1,8 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import Page from "./app/dashboard/page";
+import { Inventory } from "./pages/inventory";
+import { Sales } from "./pages/sales";
+import { Products } from "./pages/products";
 
 export const route = createBrowserRouter([
     {
@@ -11,16 +14,20 @@ export const route = createBrowserRouter([
         element: <Page />,
         children: [
             {
-                path: "estoque",
+                path: "",
                 element: <Page />,
+            },
+            {
+                path: "estoque",
+                element: <Inventory />,
             },
             {
                 path: "vendas",
-                element: <Page />,
+                element: <Sales />,
             },
             {
                 path: "produtos",
-                element: <Page />,
+                element: <Products />,
             },
         ],
     },
