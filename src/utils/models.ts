@@ -176,6 +176,7 @@ export interface DashboardData {
     totalProfit: number;             // lucro total
     productSales: ProductSale[];     // vendas por produto
     bestSellers: { name: string, quantity: number }[]; // produtos mais vendidos
+    sellers: { data: string, quantity: number }[];
     startDate: Date;
     endDate: Date;
 }

@@ -362,6 +362,11 @@ export const dashboardMock: DashboardData = {
         { name: "Vela de Café", profit: 1600, revenue: 5500 },
         { name: "Vela de Lavanda Mini", profit: 12400, revenue: 5000 },
     ],
+    sellers: [
+        { data: "2025-10-01", quantity: 30 },
+        { data: "2025-10-02", quantity: 20 },
+        { data: "2025-10-03", quantity: 10 },
+    ],
     bestSellers: [
         { name: "Vela Aromática Lavanda", quantity: 30 },
         { name: "Vela Aromática Baunilha", quantity: 20 },

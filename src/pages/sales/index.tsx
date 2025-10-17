@@ -17,11 +17,11 @@ export function Sales() {
                 <div className="grid gap-4 md:grid-cols-2">
                     <Card className="bg-background">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                            <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
+                            <CardTitle className="text-lg font-light">Receita Total</CardTitle>
                             <TrendingUp className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{formatToBRL(financialSummary.totalRevenue)}</div>
+                            <div className="text-2xl font-medium">{formatToBRL(financialSummary.totalRevenue)}</div>
                             <p className="text-xs text-muted-foreground mt-1">
                                 {financialSummary.totalOrders} {financialSummary.totalOrders === 1 ? "venda registrada" : "vendas registradas"}
                             </p>
@@ -30,11 +30,11 @@ export function Sales() {
 
                     <Card className="bg-background">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                            <CardTitle className="text-sm font-medium">Lucro Total</CardTitle>
+                            <CardTitle className="text-lg font-light">Lucro Total</CardTitle>
                             <TrendingUp className="h-4 w-4 text-green-600" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-green-600">{formatToBRL(financialSummary.totalProfit)}</div>
+                            <div className="text-2xl font-medium text-green-600">{formatToBRL(financialSummary.totalProfit)}</div>
                             <p className="text-xs text-muted-foreground mt-1">
                                 Margem média: {financialSummary.averageMargin}%
                             </p>

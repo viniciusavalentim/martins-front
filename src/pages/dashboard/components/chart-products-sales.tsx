@@ -55,13 +55,14 @@ const pieChartConfig = {
 // COMPONENTES
 export function ProductSalesChart() {
     return (
-        <Card>
+        <Card className="w-full">
             <CardHeader>
                 <CardTitle>Vendas por Dia</CardTitle>
                 <CardDescription>Lucro X Receita por venda</CardDescription>
             </CardHeader>
             <CardContent>
-                <ChartContainer config={barChartConfig}>
+                {/* className="mx-auto max-h-[256px]" */}
+                <ChartContainer config={barChartConfig} >
                     <BarChart data={productSales}>
                         <CartesianGrid vertical={false} />
                         <XAxis
@@ -98,7 +99,7 @@ export function BestProducts() {
             <CardContent>
                 <ChartContainer
                     config={pieChartConfig}
-                    className="[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square max-h-[250px]"
+                    className="[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square max-h-[196px]"
                 >
                     <PieChart>
                         <ChartTooltip content={<ChartTooltipContent hideLabel />} />
