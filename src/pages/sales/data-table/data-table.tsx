@@ -77,13 +77,11 @@ import {
   // TabsList,
   // TabsTrigger,
 } from "@/components/ui/tabs"
-import { Calculator, DollarSign, Package, Search } from "lucide-react"
-import type { Product } from "@/utils/models"
+import { DollarSign, Search, ShoppingBag, User } from "lucide-react"
+import type { Order } from "@/utils/models"
 import { formatToBRL } from "@/utils/helpers"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@radix-ui/react-separator"
-import { AddProductionProductDialog } from "../components/production-product-dialog"
-import { EditProductDialog } from "../components/edit-product-dialog"
 
 const columnLabels: Record<string, string> = {
   name: "Nome",
@@ -96,113 +94,84 @@ const columnLabels: Record<string, string> = {
 
 const HIDDEN_COLUMNS = ["select", "actions", "drag"];
 
-const ProductDetailCards: React.FC<{ product: Product }> = ({ product }) => {
+const OrderDetailCards: React.FC<{ order: Order }> = ({ order }) => {
 
-  if (!product) {
+  if (!order) {
     return (
-      <>Produto inválido</>
+      <>Pedido inválido</>
     )
   }
 
   return (
     <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-      <Card className="bg-background">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Package className="h-4 w-4" />
-            Receita
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {product.billOfMaterials && product.billOfMaterials.map((item, index) => {
-              return (
-                <div key={index} className="flex justify-between text-sm">
-                  <span>
-                    {item?.rawMaterial?.name} - {item?.quantityUsed} {item.rawMaterial?.unitOfMeasure}
-                  </span>
-                  <span className="font-medium">{formatToBRL(((item?.rawMaterial?.unitCost ? item?.rawMaterial?.unitCost : 0) * item.quantityUsed))}</span>
-                </div>
-              )
-            })}
-            <Separator className="my-2" />
-            <div className="flex justify-between font-medium">
-              <span>Custo da Receita:</span>
-              <span>{formatToBRL(product.materialCost)}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Exemplo de Card 1 */}
-      {product.additionalCosts && product.additionalCosts.length > 0 && (
+      {/* Card de Informações do Cliente (só aparece se o cliente existir no pedido) */}
+      {order.customer && (
         <Card className="bg-background">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Calculator className="h-4 w-4" />
-              Custos Adicionais
+              <User className="h-4 w-4" />
+              Cliente
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {product.additionalCosts.map((cost) => {
-                return (
-                  <div key={cost.id} className="flex justify-between text-sm">
-                    <span>
-                      {cost.description}{" "}
-                      <Badge variant="outline" className="ml-2">
-                        {cost.type === "FIXED_VALUE" ? "Fixo" : `${cost.value}%`}
-                      </Badge>
-                    </span>
-                    <span className="font-medium">{formatToBRL(cost.value)}</span>
-                  </div>
-                )
-              })}
-              <Separator className="my-2" />
-              <div className="flex justify-between font-medium">
-                <span>Total Custos Adicionais:</span>
-                <span>{formatToBRL(product.totalAdditionalCosts)}</span>
-              </div>
+            <div className="space-y-1 text-sm">
+              <p className="font-medium">{order.customer.name}</p>
+              <p className="text-muted-foreground">{order.customer.email}</p>
+              <p className="text-muted-foreground">{order.customer.phone}</p>
             </div>
           </CardContent>
         </Card>
       )}
 
+      {/* Card com os Itens do Pedido */}
+      <Card className="bg-background">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <ShoppingBag className="h-4 w-4" />
+            Itens do Pedido
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {order.items.map((item) => (
+              <div key={item.id} className="flex justify-between items-start text-sm">
+                <div>
+                  <p className="font-medium">{item.product?.name || "Produto não encontrado"}</p>
+                  <p className="text-muted-foreground">
+                    {item.quantity} x {formatToBRL(item.unitPrice)}
+                  </p>
+                </div>
+                <span className="font-medium">
+                  {formatToBRL(item.quantity * item.unitPrice)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Card com o Resumo Financeiro do Pedido */}
       <Card className="bg-background">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
-            Resumo de Precificação
+            Resumo Financeiro
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Custo da Receita:</span>
-              <span>{formatToBRL(product.materialCost)}</span>
+              <span className="text-muted-foreground">Custo Total do Pedido:</span>
+              <span>{formatToBRL(order.totalCost)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Custos Adicionais:</span>
-              <span>{formatToBRL(product.totalAdditionalCosts)}</span>
-            </div>
-            <Separator />
-            <div className="flex justify-between font-medium">
-              <span>CTP (Custo Total do Produto):</span>
-              <span>{formatToBRL(product.totalCost)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">
-                Margem de Lucro:
-                <Badge variant="secondary" className="ml-2">
-                  {product.profitMarginPorcent.toFixed(2)}%
-                </Badge>
-              </span>
-              <span className="text-green-600 font-medium">{formatToBRL(product.profit)}</span>
+              <span className="text-muted-foreground">Lucro do Pedido:</span>
+              <span className="font-medium text-green-600">{formatToBRL(order.profit)}</span>
             </div>
             <Separator />
             <div className="flex justify-between text-lg font-bold">
-              <span>Preço de Venda:</span>
-              <span className="text-primary">{formatToBRL(product.sellingPrice)}</span>
+              <span>Valor Total:</span>
+              <span className="text-primary">{formatToBRL(order.totalAmount)}</span>
             </div>
           </div>
         </CardContent>
@@ -230,7 +199,7 @@ const ProductDetailCards: React.FC<{ product: Product }> = ({ product }) => {
 //   )
 // }
 
-const columns: ColumnDef<Product>[] = [
+const columns: ColumnDef<Order>[] = [
   {
     id: 'expander',
     header: () => null,
@@ -276,15 +245,27 @@ const columns: ColumnDef<Product>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "name",
-    header: "Nome",
+    accessorKey: "orderDate",
+    header: "Data",
     cell: ({ row }) => {
-      return row.original.name
+      const date = new Date(row.original.orderDate);
+      const formattedDate = date.toLocaleDateString('pt-BR');
+      const formattedTime = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      return `${formattedDate} às ${formattedTime}`;
     },
   },
   {
+    accessorKey: "items",
+    header: "Qtd. Produtos",
+    cell: ({ row }) => (
+      <>
+        {row.original.items.length}
+      </>
+    ),
+  },
+  {
     accessorKey: "totalCost",
-    header: "Custo total (CTP)",
+    header: "Custo total Venda",
     cell: ({ row }) => (
       <>
         {formatToBRL(row.original.totalCost)}
@@ -292,22 +273,11 @@ const columns: ColumnDef<Product>[] = [
     ),
   },
   {
-    accessorKey: "profitMarginPorcent",
-    header: "Margem",
-    cell: ({ row }) => (
-      <div className="w-32">
-        <Badge variant="outline" className="text-muted-foreground px-1.5">
-          {row.original.profitMarginPorcent.toFixed(2)}%
-        </Badge>
-      </div>
-    ),
-  },
-  {
-    accessorKey: "sellingPrice",
-    header: "Preço de venda",
+    accessorKey: "totalAmount",
+    header: "Receita",
     cell: ({ row }) => (
       <>
-        {formatToBRL(row.original.sellingPrice)}
+        {formatToBRL(row.original.totalAmount)}
       </>
     ),
   },
@@ -323,32 +293,29 @@ const columns: ColumnDef<Product>[] = [
     ),
   },
   {
-    accessorKey: "stockQuantity",
-    header: "Estoque",
+    accessorKey: "status",
+    header: "Status",
     cell: ({ row }) => (
-      <>
-        <span className="text-blue-800 font-medium">
-          {row.original.stockQuantity}
-        </span>
-      </>
+      <div className="w-32">
+        <Badge variant="outline" className="text-muted-foreground px-1.5">
+          {row.original.status}
+        </Badge>
+      </div>
     ),
   },
-  {
-    id: "actions",
-    header: "Ação",
-    cell: ({ row }) => (
-      <>
-        <div className="flex gap-2">
-          <AddProductionProductDialog product={row.original} />
-          <EditProductDialog />
-        </div>
-      </>
-    ),
-  },
-
+  // {
+  //   id: "actions",
+  //   header: "Ação",
+  //   cell: ({ row }) => (
+  //     <>
+  //       <div className="flex gap-2">
+  //       </div>
+  //     </>
+  //   ),
+  // },
 ]
 
-function DraggableRow({ row }: { row: Row<Product> }) {
+function DraggableRow({ row }: { row: Row<Order> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
   })
@@ -373,9 +340,8 @@ function DraggableRow({ row }: { row: Row<Product> }) {
       </TableRow>
       {row.getIsExpanded() && (
         <TableRow className="hover:bg-card/30">
-          {/* Célula única que ocupa todas as colunas */}
           <TableCell colSpan={row.getVisibleCells().length} >
-            <ProductDetailCards product={row.original} />
+            <OrderDetailCards order={row.original} />
           </TableCell>
         </TableRow>
       )}
@@ -386,7 +352,7 @@ function DraggableRow({ row }: { row: Row<Product> }) {
 export function DataTable({
   data: initialData,
 }: {
-  data: Product[]
+  data: Order[]
 }) {
   const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
@@ -512,7 +478,7 @@ export function DataTable({
           </DropdownMenu>
           <Button variant="default" size="sm">
             <IconPlus />
-            <span className="hidden lg:inline">Novo produto</span>
+            <span className="hidden lg:inline">Nova Venda</span>
           </Button>
         </div>
       </div>

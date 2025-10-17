@@ -50,14 +50,16 @@ export interface Product {
     description?: string;
     sellingPrice: number;
     materialCost: number; // Custo Total de Produção (apenas matéria-prima).
-    totalCost: number; // Custo da matéria-prima + todos os outros custos fixos em R$.
+    totalCost: number; // Custo da matéria-prima + todos os outros custos adicionais em R$.
+    totalAdditionalCosts: number; // Custo adicionais 
+    stockQuantity: number; // quantidade de estoque
     profit: number; // Lucro em R$
-    profitMargin: number; //% de lucro
+    profitMarginPorcent: number; //% de lucro
     stockOnHand: number;
     createdAt: Date;
 
     // Relacionamentos (para carregar a composição completa do produto)
-    billOfMaterials?: ProductMaterial[];
+    billOfMaterials: ProductMaterial[];
     additionalCosts?: ProductAdditionalCost[];
 }
 
@@ -124,7 +126,8 @@ export interface Order {
     id: number;
     customerId?: number;
     orderDate: Date;
-    totalAmount: number;
+    totalAmount: number; // Faturamento (RECEITA)
+    profit: number; //Lucro em R$
     totalCost: number; // Essencial para o dashboard de lucratividade
     status: OrderStatus;
 
@@ -149,6 +152,34 @@ export interface OrderItem {
     // Relacionamento (opcional, para carregar detalhes do produto)
     product?: Product;
 }
+
+
+export interface FinancialSummary {
+    startDate: Date;
+    endDate: Date;
+    totalRevenue: number;
+    totalProfit: number;
+    totalOrders: number;
+    averageMargin: number;
+}
+
+
+export interface ProductSale {
+    name: string;
+    profit: number;      // lucro do produto
+    revenue: number;     // receita/faturamento do produto
+}
+
+export interface DashboardData {
+    totalRevenue: number;            // faturamento total
+    totalOrders: number;             // total de pedidos
+    totalProfit: number;             // lucro total
+    productSales: ProductSale[];     // vendas por produto
+    bestSellers: { name: string, quantity: number }[]; // produtos mais vendidos
+    startDate: Date;
+    endDate: Date;
+}
+
 
 // ============================================================================
 //                             DTOs (Data Transfer Objects)

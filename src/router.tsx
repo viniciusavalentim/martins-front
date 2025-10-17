@@ -3,6 +3,7 @@ import Page from "./app/dashboard/page";
 import { Inventory } from "./pages/inventory";
 import { Sales } from "./pages/sales";
 import { Products } from "./pages/products";
+import { Dashboard } from "./pages/dashboard";
 
 export const route = createBrowserRouter([
     {
@@ -15,7 +16,7 @@ export const route = createBrowserRouter([
         children: [
             {
                 path: "",
-                element: <Page />,
+                element: <Dashboard />,
             },
             {
                 path: "estoque",
