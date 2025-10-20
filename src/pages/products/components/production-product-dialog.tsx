@@ -76,7 +76,7 @@ export function AddProductionProductDialog({ product }: ProductParams) {
                     <Button
                         variant="outline"
                         size="icon"
-                        className="gap-2"
+                        className="gap-2 mr-2"
                     >
                         <Wrench className="h-4 w-4" />
                     </Button>

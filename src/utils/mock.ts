@@ -1,4 +1,4 @@
-import type { Customer, DashboardData, FinancialSummary, Order, Product, ProductAdditionalCost, ProductMaterial, RawMaterial, ReportRawMaterial } from "./models";
+import type { Customer, DashboardData, FinancialSummary, Order, Product, ProductAdditionalCost, ProductMaterial, RawMaterial, ReportProduct, ReportRawMaterial } from "./models";
 
 export const rawMaterials: RawMaterial[] = [
     {
@@ -62,21 +62,21 @@ export const productMaterials: ProductMaterial[] = [
     {
         id: 1,
         productId: 1,
-        rawMaterialId: 1, // Cera de Soja
+        rawMaterialId: "1", // Cera de Soja
         quantityUsed: 150, // g
         rawMaterial: rawMaterials.find((m) => m.id === "1"),
     },
     {
         id: 2,
         productId: 1,
-        rawMaterialId: 2, // Essência de Lavanda
+        rawMaterialId: "2", // Essência de Lavanda
         quantityUsed: 10, // ml
         rawMaterial: rawMaterials.find((m) => m.id === "2"),
     },
     {
         id: 3,
         productId: 1,
-        rawMaterialId: 3, // Pavio
+        rawMaterialId: "3", // Pavio
         quantityUsed: 1, // un
         rawMaterial: rawMaterials.find((m) => m.id === "3"),
     },
@@ -84,21 +84,21 @@ export const productMaterials: ProductMaterial[] = [
     {
         id: 4,
         productId: 2,
-        rawMaterialId: 1,
+        rawMaterialId: "1",
         quantityUsed: 160,
         rawMaterial: rawMaterials.find((m) => m.id === "1"),
     },
     {
         id: 5,
         productId: 2,
-        rawMaterialId: 2,
+        rawMaterialId: "2",
         quantityUsed: 8,
         rawMaterial: rawMaterials.find((m) => m.id === "2"),
     },
     {
         id: 6,
         productId: 2,
-        rawMaterialId: 3,
+        rawMaterialId: "3",
         quantityUsed: 1,
         rawMaterial: rawMaterials.find((m) => m.id === "3"),
     },
@@ -106,21 +106,21 @@ export const productMaterials: ProductMaterial[] = [
     {
         id: 7,
         productId: 3,
-        rawMaterialId: 1,
+        rawMaterialId: "1",
         quantityUsed: 180,
         rawMaterial: rawMaterials.find((m) => m.id === "1"),
     },
     {
         id: 8,
         productId: 3,
-        rawMaterialId: 2,
+        rawMaterialId: "2",
         quantityUsed: 12,
         rawMaterial: rawMaterials.find((m) => m.id === "2"),
     },
     {
         id: 9,
         productId: 3,
-        rawMaterialId: 3,
+        rawMaterialId: "3",
         quantityUsed: 1,
         rawMaterial: rawMaterials.find((m) => m.id === "3"),
     },
@@ -281,7 +281,7 @@ export const orders: Order[] = [
         totalAmount: 93.0, // 2 velas de lavanda
         totalCost: 19.4, // 9.7 * 2
         profit: 73.6, // 93 - 19.4
-        status: "PAID",
+        status: "PENDING",
         items: [
             {
                 id: 1,
@@ -302,7 +302,7 @@ export const orders: Order[] = [
         totalAmount: 151.0, // 1 de baunilha + 2 premium
         totalCost: 34.59, // 10.41 + 12.09 * 2
         profit: 116.41, // 151 - 34.59
-        status: "SHIPPED",
+        status: "IN_MATURING",
         items: [
             {
                 id: 2,
@@ -511,3 +511,180 @@ export const reportRawMaterials: ReportRawMaterial[] = [
         },
     },
 ]
+
+
+
+export const reportProducts: ReportProduct[] = [
+    {
+        id: "p1",
+        name: "Vela Aromática de Lavanda",
+        description: "Vela artesanal feita com cera de soja e essência natural de lavanda.",
+        sellingPrice: 49.90,
+        materialCost: 18.50,
+        totalAdditionalCosts: 6.50,
+        totalCost: 25.00,
+        profit: 24.90,
+        profitMarginPorcent: 49.9,
+        stockQuantity: 40,
+        stockOnHand: 40,
+        movementType: "production",
+        createdAt: new Date("2025-09-01"),
+        billOfMaterials: [
+            {
+                id: 1,
+                productId: 1,
+                rawMaterialId: "101",
+                quantityUsed: 120,
+                rawMaterial: {
+                    id: "101",
+                    name: "Cera de Soja",
+                    currentStock: 1500,
+                    unitOfMeasure: "g",
+                    totalCost: 120,
+                    unitCost: 0.08,
+                    lastUpdatedAt: new Date("2025-09-01")
+                },
+            },
+            {
+                id: 2,
+                productId: 1,
+                rawMaterialId: "102",
+                quantityUsed: 10,
+                rawMaterial: {
+                    id: "102",
+                    name: "Essência de Lavanda",
+                    currentStock: 500,
+                    unitOfMeasure: "ml",
+                    totalCost: 200,
+                    unitCost: 0.4,
+                    lastUpdatedAt: new Date("2025-09-01")
+                },
+            },
+            {
+                id: 3,
+                productId: 1,
+                rawMaterialId: "103",
+                quantityUsed: 1,
+                rawMaterial: {
+                    id: "103",
+                    name: "Pavio de Algodão",
+                    currentStock: 300,
+                    unitOfMeasure: "un",
+                    totalCost: 100,
+                    unitCost: 0.33,
+                    lastUpdatedAt: new Date("2025-09-01")
+                },
+            },
+        ],
+        additionalCosts: [
+            { id: 1, productId: 1, description: "Embalagem", type: "FIXED_VALUE", value: 2.5 },
+            { id: 2, productId: 1, description: "Etiqueta", type: "FIXED_VALUE", value: 1.0 },
+            { id: 3, productId: 1, description: "Mão de obra", type: "PERCENTAGE", value: 12 },
+        ],
+    },
+    {
+        id: "p2",
+        name: "Vela de Baunilha e Canela",
+        description: "Vela gourmet com notas doces de baunilha e toque de canela.",
+        sellingPrice: 54.90,
+        materialCost: 20.00,
+        totalAdditionalCosts: 7.00,
+        totalCost: 27.00,
+        profit: 27.90,
+        profitMarginPorcent: 50.8,
+        stockQuantity: 30,
+        stockOnHand: 30,
+        movementType: "sell",
+        createdAt: new Date("2025-09-05"),
+        billOfMaterials: [
+            {
+                id: 4,
+                productId: 2,
+                rawMaterialId: "101",
+                quantityUsed: 130,
+                rawMaterial: {
+                    id: "101",
+                    name: "Cera de Soja",
+                    currentStock: 1500,
+                    unitOfMeasure: "g",
+                    totalCost: 120,
+                    unitCost: 0.08,
+                    lastUpdatedAt: new Date("2025-09-01")
+
+                },
+            },
+            {
+                id: 5,
+                productId: 2,
+                rawMaterialId: "104",
+                quantityUsed: 10,
+                rawMaterial: {
+                    id: "104",
+                    name: "Essência de Baunilha e Canela",
+                    currentStock: 250,
+                    unitOfMeasure: "ml",
+                    totalCost: 150,
+                    unitCost: 0.6,
+                    lastUpdatedAt: new Date("2025-09-01")
+                },
+            },
+        ],
+        additionalCosts: [
+            { id: 4, productId: 2, description: "Pote de vidro", type: "FIXED_VALUE", value: 3.0 },
+            { id: 5, productId: 2, description: "Rótulo decorativo", type: "FIXED_VALUE", value: 1.5 },
+            { id: 6, productId: 2, description: "Mão de obra", type: "PERCENTAGE", value: 10 },
+        ],
+    },
+    {
+        id: "p3",
+        name: "Vela de Rosas Vermelhas",
+        description: "Vela romântica com fragrância de pétalas de rosas e acabamento sofisticado.",
+        sellingPrice: 64.90,
+        materialCost: 23.00,
+        totalAdditionalCosts: 8.00,
+        totalCost: 31.00,
+        profit: 33.90,
+        profitMarginPorcent: 52.2,
+        stockQuantity: 25,
+        stockOnHand: 23,
+        movementType: "sell",
+        createdAt: new Date("2025-09-10"),
+        billOfMaterials: [
+            {
+                id: 7,
+                productId: 3,
+                rawMaterialId: "101",
+                quantityUsed: 140,
+                rawMaterial: {
+                    id: "101",
+                    name: "Cera de Soja",
+                    currentStock: 1500,
+                    unitOfMeasure: "g",
+                    totalCost: 120,
+                    unitCost: 0.08,
+                    lastUpdatedAt: new Date("2025-09-01")
+                },
+            },
+            {
+                id: 8,
+                productId: 3,
+                rawMaterialId: "105",
+                quantityUsed: 12,
+                rawMaterial: {
+                    id: "105",
+                    name: "Essência de Rosas Vermelhas",
+                    currentStock: 300,
+                    unitOfMeasure: "ml",
+                    totalCost: 180,
+                    unitCost: 0.6,
+                    lastUpdatedAt: new Date("2025-09-01")
+                },
+            },
+        ],
+        additionalCosts: [
+            { id: 7, productId: 3, description: "Caixa presenteável", type: "FIXED_VALUE", value: 4.5 },
+            { id: 8, productId: 3, description: "Laço decorativo", type: "FIXED_VALUE", value: 2.0 },
+            { id: 9, productId: 3, description: "Mão de obra", type: "PERCENTAGE", value: 15 },
+        ],
+    },
+];

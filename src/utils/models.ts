@@ -74,7 +74,7 @@ export interface Product {
 export interface ProductMaterial {
     id: number;
     productId: number;
-    rawMaterialId: number;
+    rawMaterialId: string;
     quantityUsed: number;
 
     // Relacionamento (opcional, para carregar detalhes da matéria-prima)
@@ -119,7 +119,7 @@ export interface Customer {
 /**
  * Define os possíveis status de um pedido/venda.
  */
-export type OrderStatus = 'PENDING' | 'PAID' | 'SHIPPED' | 'CANCELLED';
+export type OrderStatus = 'PENDING' | 'IN_PRODUCTION' | 'IN_MATURING' | 'CANCELLED' | 'WAITING_DELIVERY';
 
 /**
  * Representa o "cabeçalho" de uma venda ou pedido.
@@ -218,4 +218,35 @@ export interface ReportRawMaterial {
     lastUpdatedAt?: Date;
     createdAt: string;
     supplier?: Supplier;
+}
+
+export interface ReportProduct {
+    id: string;
+    name: string;
+    description?: string;
+    sellingPrice: number;
+    materialCost: number; // Custo Total de Produção (apenas matéria-prima).
+    totalCost: number; // Custo da matéria-prima + todos os outros custos adicionais em R$.
+    totalAdditionalCosts: number; // Custo adicionais 
+    stockQuantity: number; // quantidade de estoque
+    profit: number; // Lucro em R$
+    profitMarginPorcent: number; //% de lucro
+    stockOnHand: number;
+    movementType: "sell" | "production";
+    createdAt: Date;
+
+
+    // Relacionamentos (para carregar a composição completa do produto)
+    billOfMaterials: ProductMaterial[];
+    additionalCosts?: ProductAdditionalCost[];
+}
+
+export interface ReportProductMaterial {
+    id: number;
+    productId: number;
+    rawMaterialId: number;
+    quantityUsed: number;
+
+    // Relacionamento (opcional, para carregar detalhes da matéria-prima)
+    rawMaterial?: RawMaterial;
 }

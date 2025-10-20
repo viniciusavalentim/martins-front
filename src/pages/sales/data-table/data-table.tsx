@@ -79,7 +79,7 @@ import {
 } from "@/components/ui/tabs"
 import { DollarSign, Search, ShoppingBag, User } from "lucide-react"
 import type { Order } from "@/utils/models"
-import { formatToBRL } from "@/utils/helpers"
+import { formatToBRL, getOrderStatusBadge } from "@/utils/helpers"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@radix-ui/react-separator"
 
@@ -296,11 +296,9 @@ const columns: ColumnDef<Order>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => (
-      <div className="w-32">
-        <Badge variant="outline" className="text-muted-foreground px-1.5">
-          {row.original.status}
-        </Badge>
-      </div>
+      <>
+        {getOrderStatusBadge(row.original.status)}
+      </>
     ),
   },
   // {

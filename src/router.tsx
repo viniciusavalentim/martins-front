@@ -30,6 +30,10 @@ export const route = createBrowserRouter([
                 path: "produtos",
                 element: <Products />,
             },
+            {
+                path: "despesas",
+                element: <Products />,
+            },
         ],
     },
 ]);

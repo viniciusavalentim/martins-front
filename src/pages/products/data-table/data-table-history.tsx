@@ -25,7 +25,6 @@ import {
   IconChevronsLeft,
   IconChevronsRight,
   IconLayoutColumns,
-  IconPlus,
 } from "@tabler/icons-react"
 import {
   type ColumnDef,
@@ -74,18 +73,12 @@ import {
 import {
   Tabs,
   TabsContent,
-  TabsList,
-  TabsTrigger,
-  // TabsList,
-  // TabsTrigger,
 } from "@/components/ui/tabs"
-import { Calculator, Clock, DollarSign, List, Package, Search } from "lucide-react"
-import type { Product } from "@/utils/models"
-import { formatToBRL } from "@/utils/helpers"
+import { Calculator, DollarSign, Package, Search } from "lucide-react"
+import type { ReportProduct } from "@/utils/models"
+import { formatToBRL, getTypeBadgeProduct } from "@/utils/helpers"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@radix-ui/react-separator"
-import { AddProductionProductDialog } from "../components/production-product-dialog"
-import { EditProductDialog } from "../components/edit-product-dialog"
 
 const columnLabels: Record<string, string> = {
   name: "Nome",
@@ -98,7 +91,7 @@ const columnLabels: Record<string, string> = {
 
 const HIDDEN_COLUMNS = ["select", "actions", "drag"];
 
-const ProductDetailCards: React.FC<{ product: Product }> = ({ product }) => {
+const ProductDetailCards: React.FC<{ product: ReportProduct }> = ({ product }) => {
 
   if (!product) {
     return (
@@ -213,26 +206,7 @@ const ProductDetailCards: React.FC<{ product: Product }> = ({ product }) => {
   )
 }
 
-// function DragHandle({ id }: { id: string }) {
-//   const { attributes, listeners } = useSortable({
-//     id,
-//   })
-
-//   return (
-//     <Button
-//       {...attributes}
-//       {...listeners}
-//       variant="ghost"
-//       size="icon"
-//       className="text-muted-foreground size-7 hover:bg-transparent"
-//     >
-//       <IconGripVertical className="text-muted-foreground size-3" />
-//       <span className="sr-only">Drag to reorder</span>
-//     </Button>
-//   )
-// }
-
-const columns: ColumnDef<Product>[] = [
+const columns: ColumnDef<ReportProduct>[] = [
   {
     id: 'expander',
     header: () => null,
@@ -325,6 +299,15 @@ const columns: ColumnDef<Product>[] = [
     ),
   },
   {
+    accessorKey: "movementType",
+    header: "Tipo",
+    cell: ({ row }) => (
+      <>
+        {getTypeBadgeProduct(row.original.movementType)}
+      </>
+    ),
+  },
+  {
     accessorKey: "stockQuantity",
     header: "Estoque",
     cell: ({ row }) => (
@@ -334,23 +317,10 @@ const columns: ColumnDef<Product>[] = [
         </span>
       </>
     ),
-  },
-  {
-    id: "actions",
-    header: "Ação",
-    cell: ({ row }) => (
-      <>
-        <div className="flex gap-2">
-          <AddProductionProductDialog product={row.original} />
-          <EditProductDialog />
-        </div>
-      </>
-    ),
-  },
-
+  }
 ]
 
-function DraggableRow({ row }: { row: Row<Product> }) {
+function DraggableRow({ row }: { row: Row<ReportProduct> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
   })
@@ -385,10 +355,10 @@ function DraggableRow({ row }: { row: Row<Product> }) {
   )
 }
 
-export function DataTable({
+export function DataTableHistory({
   data: initialData,
 }: {
-  data: Product[]
+  data: ReportProduct[]
 }) {
   const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
@@ -460,10 +430,6 @@ export function DataTable({
     >
       <div className="flex items-center justify-between px-4 lg:px-6">
         <div className="flex items-center gap-2">
-          <TabsList className="bg-transparent border">
-            <TabsTrigger value="outline" className="data-[state=active]:bg-accent data-[state=active]:text-primary"><List /> Lista</TabsTrigger>
-            <TabsTrigger value="password" className="data-[state=active]:bg-accent data-[state=active]:text-primary"><Clock /> Histórico Produção</TabsTrigger>
-          </TabsList>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <Input
@@ -518,10 +484,6 @@ export function DataTable({
             </DropdownMenuContent>
 
           </DropdownMenu>
-          <Button variant="default" size="sm">
-            <IconPlus />
-            <span className="hidden lg:inline">Novo produto</span>
-          </Button>
         </div>
       </div>
       <TabsContent

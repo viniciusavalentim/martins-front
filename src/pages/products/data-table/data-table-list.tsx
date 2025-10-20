@@ -24,7 +24,6 @@ import {
   IconChevronRight,
   IconChevronsLeft,
   IconChevronsRight,
-  IconGripVertical,
   IconLayoutColumns,
 } from "@tabler/icons-react"
 import {
@@ -32,6 +31,7 @@ import {
   type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
+  getExpandedRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFilteredRowModel,
@@ -46,7 +46,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 import { Checkbox } from "@/components/ui/checkbox"
-import { Tabs, TabsContent } from "@/components/ui/tabs"
 
 import {
   DropdownMenu,
@@ -71,9 +70,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Search } from "lucide-react"
-import type { ReportRawMaterial } from "@/utils/models"
-import { formatToBRL, getTypeBadge } from "@/utils/helpers"
+import {
+  Tabs,
+  TabsContent,
+} from "@/components/ui/tabs"
+import { Calculator, DollarSign, Package, Search } from "lucide-react"
+import type { Product } from "@/utils/models"
+import { formatToBRL } from "@/utils/helpers"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@radix-ui/react-separator"
+import { AddProductionProductDialog } from "../components/production-product-dialog"
+import { ProductDialog } from "../components/product-dialog"
 
 const columnLabels: Record<string, string> = {
   name: "Nome",
@@ -86,31 +93,158 @@ const columnLabels: Record<string, string> = {
 
 const HIDDEN_COLUMNS = ["select", "actions", "drag"];
 
-// Create a separate component for the drag handle
-function DragHandle({ id }: { id: string }) {
-  const { attributes, listeners } = useSortable({
-    id,
-  })
+const ProductDetailCards: React.FC<{ product: Product }> = ({ product }) => {
+
+  if (!product) {
+    return (
+      <>Produto inválido</>
+    )
+  }
 
   return (
-    <Button
-      {...attributes}
-      {...listeners}
-      variant="ghost"
-      size="icon"
-      className="text-muted-foreground size-7 hover:bg-transparent"
-    >
-      <IconGripVertical className="text-muted-foreground size-3" />
-      <span className="sr-only">Drag to reorder</span>
-    </Button>
+    <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+      <Card className="bg-background">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Receita
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {product.billOfMaterials && product.billOfMaterials.map((item, index) => {
+              return (
+                <div key={index} className="flex justify-between text-sm">
+                  <span>
+                    {item?.rawMaterial?.name} - {item?.quantityUsed} {item.rawMaterial?.unitOfMeasure}
+                  </span>
+                  <span className="font-medium">{formatToBRL(((item?.rawMaterial?.unitCost ? item?.rawMaterial?.unitCost : 0) * item.quantityUsed))}</span>
+                </div>
+              )
+            })}
+            <Separator className="my-2" />
+            <div className="flex justify-between font-medium">
+              <span>Custo da Receita:</span>
+              <span>{formatToBRL(product.materialCost)}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Exemplo de Card 1 */}
+      {product.additionalCosts && product.additionalCosts.length > 0 && (
+        <Card className="bg-background">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Calculator className="h-4 w-4" />
+              Custos Adicionais
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {product.additionalCosts.map((cost) => {
+                return (
+                  <div key={cost.id} className="flex justify-between text-sm">
+                    <span>
+                      {cost.description}{" "}
+                      <Badge variant="outline" className="ml-2">
+                        {cost.type === "FIXED_VALUE" ? "Fixo" : `${cost.value}%`}
+                      </Badge>
+                    </span>
+                    <span className="font-medium">{formatToBRL(cost.value)}</span>
+                  </div>
+                )
+              })}
+              <Separator className="my-2" />
+              <div className="flex justify-between font-medium">
+                <span>Total Custos Adicionais:</span>
+                <span>{formatToBRL(product.totalAdditionalCosts)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="bg-background">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Resumo de Precificação
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Custo da Receita:</span>
+              <span>{formatToBRL(product.materialCost)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Custos Adicionais:</span>
+              <span>{formatToBRL(product.totalAdditionalCosts)}</span>
+            </div>
+            <Separator />
+            <div className="flex justify-between font-medium">
+              <span>CTP (Custo Total do Produto):</span>
+              <span>{formatToBRL(product.totalCost)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">
+                Margem de Lucro:
+                <Badge variant="secondary" className="ml-2">
+                  {product.profitMarginPorcent.toFixed(2)}%
+                </Badge>
+              </span>
+              <span className="text-green-600 font-medium">{formatToBRL(product.profit)}</span>
+            </div>
+            <Separator />
+            <div className="flex justify-between text-lg font-bold">
+              <span>Preço de Venda:</span>
+              <span className="text-primary">{formatToBRL(product.sellingPrice)}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 
-const columns: ColumnDef<ReportRawMaterial>[] = [
+// function DragHandle({ id }: { id: string }) {
+//   const { attributes, listeners } = useSortable({
+//     id,
+//   })
+
+//   return (
+//     <Button
+//       {...attributes}
+//       {...listeners}
+//       variant="ghost"
+//       size="icon"
+//       className="text-muted-foreground size-7 hover:bg-transparent"
+//     >
+//       <IconGripVertical className="text-muted-foreground size-3" />
+//       <span className="sr-only">Drag to reorder</span>
+//     </Button>
+//   )
+// }
+
+const columns: ColumnDef<Product>[] = [
   {
-    id: "drag",
+    id: 'expander',
     header: () => null,
-    cell: ({ row }) => <DragHandle id={row.original.id} />,
+    cell: ({ row }) => {
+      return row.getCanExpand() ? (
+        <button
+          {...{
+            onClick: row.getToggleExpandedHandler(),
+            style: { cursor: 'pointer' },
+          }}
+        >
+          <Badge variant="outline" className="text-muted-foreground p-2">
+            {row.getIsExpanded() ? <IconChevronDown size={18} /> : <IconChevronRight size={18} />}
+          </Badge>
+        </button>
+      ) : null
+    },
   },
   {
     id: "select",
@@ -146,37 +280,8 @@ const columns: ColumnDef<ReportRawMaterial>[] = [
     },
   },
   {
-    accessorKey: "catogory",
-    header: "Categoria",
-    cell: ({ row }) => (
-      <div className="w-32">
-        <Badge variant="outline" className="text-muted-foreground px-1.5">
-          {row.original.category}
-        </Badge>
-      </div>
-    ),
-  },
-  {
-    accessorKey: "currentStock",
-    header: "Quantidade",
-    cell: ({ row }) => (
-      <>
-        {row.original.currentStock} {row.original.unitOfMeasure}
-      </>
-    ),
-  },
-  {
-    accessorKey: "movementType",
-    header: "Tipo",
-    cell: ({ row }) => (
-      <>
-        {getTypeBadge(row.original.movementType)}
-      </>
-    ),
-  },
-  {
     accessorKey: "totalCost",
-    header: "Custo total",
+    header: "Custo total (CTP)",
     cell: ({ row }) => (
       <>
         {formatToBRL(row.original.totalCost)}
@@ -184,93 +289,99 @@ const columns: ColumnDef<ReportRawMaterial>[] = [
     ),
   },
   {
-    accessorKey: "unitCost",
-    header: "Custo/unidade",
+    accessorKey: "profitMarginPorcent",
+    header: "Margem",
+    cell: ({ row }) => (
+      <div className="w-32">
+        <Badge variant="outline" className="text-muted-foreground px-1.5">
+          {row.original.profitMarginPorcent.toFixed(2)}%
+        </Badge>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "sellingPrice",
+    header: "Preço de venda",
     cell: ({ row }) => (
       <>
-        {formatToBRL(row.original.totalCost / row.original.currentStock)}
+        {formatToBRL(row.original.sellingPrice)}
       </>
     ),
   },
   {
-    accessorKey: "supplier.name",
-    header: "Fornecedor",
+    accessorKey: "profit",
+    header: "Lucro Liquido",
     cell: ({ row }) => (
       <>
-        {row.original.supplier?.name}
+        <span className="text-green-600 font-medium">
+          {formatToBRL(row.original.profit)}
+        </span>
       </>
     ),
   },
-  // {
-  //   accessorKey: "status",
-  //   header: "Status",
-  //   cell: ({ row }) => (
-  //     <Badge variant="outline" className="text-muted-foreground px-1.5">
-  //       {row.original.status === "Done" ? (
-  //         <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
-  //       ) : (
-  //         <IconLoader />
-  //       )}
-  //       {row.original.status}
-  //     </Badge>
-  //   ),
-  // },
-  // {
-  //   accessorKey: "target",
-  //   header: () => <div className="w-full text-right">Target</div>,
-  //   cell: ({ row }) => (
-  //     <form
-  //       onSubmit={(e) => {
-  //         e.preventDefault()
-  //         toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-  //           loading: `Saving ${row.original.header}`,
-  //           success: "Done",
-  //           error: "Error",
-  //         })
-  //       }}
-  //     >
-  //       <Label htmlFor={`${row.original.id}-target`} className="sr-only">
-  //         Target
-  //       </Label>
-  //       <Input
-  //         className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
-  //         defaultValue={row.original.target}
-  //         id={`${row.original.id}-target`}
-  //       />
-  //     </form>
-  //   ),
-  // },
+  {
+    accessorKey: "stockQuantity",
+    header: "Estoque",
+    cell: ({ row }) => (
+      <>
+        <span className="text-blue-800 font-medium">
+          {row.original.stockQuantity}
+        </span>
+      </>
+    ),
+  },
+  {
+    id: "actions",
+    header: "Ação",
+    cell: ({ row }) => (
+      <>
+        <AddProductionProductDialog product={row.original} />
+        <ProductDialog product={row.original} />
+      </>
+    ),
+  },
+
 ]
 
-function DraggableRow({ row }: { row: Row<ReportRawMaterial> }) {
+function DraggableRow({ row }: { row: Row<Product> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
   })
 
   return (
-    <TableRow
-      data-state={row.getIsSelected() && "selected"}
-      data-dragging={isDragging}
-      ref={setNodeRef}
-      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition: transition,
-      }}
-    >
-      {row.getVisibleCells().map((cell) => (
-        <TableCell key={cell.id}>
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </TableCell>
-      ))}
-    </TableRow>
+    <>
+      <TableRow
+        ref={setNodeRef}
+        data-state={row.getIsSelected() && "selected"}
+        data-dragging={isDragging}
+        className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
+        style={{
+          transform: CSS.Transform.toString(transform),
+          transition: transition,
+        }}
+      >
+        {row.getVisibleCells().map((cell) => (
+          <TableCell key={cell.id}>
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableCell>
+        ))}
+      </TableRow>
+      {row.getIsExpanded() && (
+        <TableRow className="hover:bg-card/30">
+          {/* Célula única que ocupa todas as colunas */}
+          <TableCell colSpan={row.getVisibleCells().length} >
+            <ProductDetailCards product={row.original} />
+          </TableCell>
+        </TableRow>
+      )}
+    </>
   )
 }
 
-export function DataTable({
+export function DataTableList({
   data: initialData,
 }: {
-  data: ReportRawMaterial[]
+  data: Product[]
 }) {
   const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
@@ -306,14 +417,17 @@ export function DataTable({
       columnFilters,
       pagination,
     },
-    getRowId: (row) => row.id.toString(),
+    enableExpanding: true,
     enableRowSelection: true,
+    getRowId: (row) => row.id.toString(),
+    getRowCanExpand: () => true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -338,11 +452,7 @@ export function DataTable({
       className="w-full flex-col justify-start gap-6"
     >
       <div className="flex items-center justify-between px-4 lg:px-6">
-        <div className="flex gap-2 items-center">
-          {/* <TabsList className="bg-transparent border">
-            <TabsTrigger value="outline" className="data-[state=active]:bg-accent data-[state=active]:text-primary"><List /> Lista</TabsTrigger>
-            <TabsTrigger value="password" className="data-[state=active]:bg-accent data-[state=active]:text-primary"><Clock /> Histórico</TabsTrigger>
-          </TabsList> */}
+        <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <Input
@@ -354,7 +464,6 @@ export function DataTable({
         </div>
 
         <div className="flex items-center gap-2">
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -398,6 +507,7 @@ export function DataTable({
             </DropdownMenuContent>
 
           </DropdownMenu>
+          <ProductDialog />
         </div>
       </div>
       <TabsContent
@@ -534,137 +644,19 @@ export function DataTable({
         </div>
       </TabsContent>
       <TabsContent
-        value="password"
-        className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
+        value="past-performance"
+        className="flex flex-col px-4 lg:px-6"
       >
-        <div className="overflow-hidden rounded-lg border">
-          <DndContext
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-            sensors={sensors}
-            id={sortableId}
-          >
-            <Table>
-              <TableHeader className="bg-muted sticky top-0 z-10">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id} colSpan={header.colSpan}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                        </TableHead>
-                      )
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows?.length ? (
-                  <SortableContext
-                    items={dataIds}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {table.getRowModel().rows.map((row) => (
-                      <DraggableRow key={row.id} row={row} />
-                    ))}
-                  </SortableContext>
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      No results.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </DndContext>
-        </div>
-        <div className="flex items-center justify-between px-4">
-          <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-            {table.getFilteredSelectedRowModel().rows.length} de{" "}
-            {table.getFilteredRowModel().rows.length} linha(s) selecionadas.
-          </div>
-          <div className="flex w-full items-center gap-8 lg:w-fit">
-            <div className="hidden items-center gap-2 lg:flex">
-              <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                Linhas por página
-              </Label>
-              <Select
-                value={`${table.getState().pagination.pageSize}`}
-                onValueChange={(value) => {
-                  table.setPageSize(Number(value))
-                }}
-              >
-                <SelectTrigger size="sm" className="w-20" id="rows-per-page">
-                  <SelectValue
-                    placeholder={table.getState().pagination.pageSize}
-                  />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[10, 20, 30, 40, 50].map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Página {table.getState().pagination.pageIndex + 1} de{" "}
-              {table.getPageCount()}
-            </div>
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to first page</span>
-                <IconChevronsLeft />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to previous page</span>
-                <IconChevronLeft />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to next page</span>
-                <IconChevronRight />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden size-8 lg:flex"
-                size="icon"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to last page</span>
-                <IconChevronsRight />
-              </Button>
-            </div>
-          </div>
-        </div>
+        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
+      </TabsContent>
+      <TabsContent value="key-personnel" className="flex flex-col px-4 lg:px-6">
+        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
+      </TabsContent>
+      <TabsContent
+        value="focus-documents"
+        className="flex flex-col px-4 lg:px-6"
+      >
+        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
       </TabsContent>
     </Tabs>
   )
