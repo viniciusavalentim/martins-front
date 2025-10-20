@@ -36,10 +36,13 @@ export interface RawMaterial {
     unitCost: number; // Custo por 'g', 'ml' ou 'un'
     lowStockThreshold?: number; //Alerta de estoque minimo
     lastUpdatedAt: Date;
+    createdAt?: Date;
+
 
     // Relacionamento (opcional, para carregar dados do fornecedor)
     supplier?: Supplier;
 }
+
 
 /**
  * Representa o produto final (a vela) pronto para venda.
@@ -198,3 +201,21 @@ export type CreateProductDTO = Omit<Product, 'id' | 'createdAt'> & {
 export type CreateOrderDTO = Omit<Order, 'id' | 'orderDate' | 'totalAmount' | 'totalCost' | 'items'> & {
     items: Omit<OrderItem, 'id' | 'orderId' | 'unitPrice' | 'unitCost'>[];
 };
+
+
+
+export interface ReportRawMaterial {
+    id: string;
+    name: string;
+    category?: string;
+    supplierId?: number;
+    currentStock: number;
+    unitOfMeasure: UnitOfMeasure;
+    totalCost: number;
+    unitCost: number;
+    lowStockThreshold?: number;
+    movementType: "add" | "remove";
+    lastUpdatedAt?: Date;
+    createdAt: string;
+    supplier?: Supplier;
+}

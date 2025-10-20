@@ -1,4 +1,4 @@
-import type { Customer, DashboardData, FinancialSummary, Order, Product, ProductAdditionalCost, ProductMaterial, RawMaterial } from "./models";
+import type { Customer, DashboardData, FinancialSummary, Order, Product, ProductAdditionalCost, ProductMaterial, RawMaterial, ReportRawMaterial } from "./models";
 
 export const rawMaterials: RawMaterial[] = [
     {
@@ -396,3 +396,118 @@ export const financialSummary: FinancialSummary = (() => {
         averageMargin: Number(averageMargin.toFixed(2)),
     };
 })();
+
+
+
+export const reportRawMaterials: ReportRawMaterial[] = [
+    {
+        id: "1",
+        name: "Cera de Soja",
+        category: "Cera",
+        supplierId: 101,
+        currentStock: 2500, // em gramas
+        unitOfMeasure: "g",
+        totalCost: 150.0,
+        unitCost: 0.06,
+        lowStockThreshold: 500,
+        movementType: "add",
+        createdAt: "2025-10-10T09:30:00Z",
+        lastUpdatedAt: new Date("2025-10-15T11:45:00Z"),
+        supplier: {
+            id: 101,
+            name: "EcoWax Brasil",
+            contactName: "Ana Rodrigues",
+            phone: "(11) 98877-1122",
+            email: "contato@ecowax.com.br",
+            createdAt: new Date("2025-10-15T11:45:00Z"),
+        },
+    },
+    {
+        id: "2",
+        name: "Essência de Lavanda",
+        category: "Aromatizante",
+        supplierId: 102,
+        currentStock: 800, // em ml
+        unitOfMeasure: "ml",
+        totalCost: 96.0,
+        unitCost: 0.12,
+        lowStockThreshold: 100,
+        movementType: "remove",
+        createdAt: "2025-10-08T14:20:00Z",
+        lastUpdatedAt: new Date("2025-10-17T16:00:00Z"),
+        supplier: {
+            id: 102,
+            name: "Aromas & Essências LTDA",
+            contactName: "Carlos Mendes",
+            phone: "(21) 97444-2211",
+            email: "vendas@aromasessencias.com",
+            createdAt: new Date("2025-10-15T11:45:00Z"),
+        },
+    },
+    {
+        id: "3",
+        name: "Pavio de Algodão",
+        category: "Pavio",
+        supplierId: 103,
+        currentStock: 350, // unidades
+        unitOfMeasure: "un",
+        totalCost: 52.5,
+        unitCost: 0.15,
+        lowStockThreshold: 50,
+        movementType: "add",
+        createdAt: "2025-10-12T10:00:00Z",
+        lastUpdatedAt: new Date("2025-10-17T13:30:00Z"),
+        supplier: {
+            id: 103,
+            name: "Fios Naturais",
+            contactName: "Juliana Castro",
+            phone: "(31) 98222-3344",
+            email: "contato@fiosnaturais.com.br",
+            createdAt: new Date("2025-10-15T11:45:00Z"),
+        },
+    },
+    {
+        id: "4",
+        name: "Corante Rosa",
+        category: "Corante",
+        supplierId: 104,
+        currentStock: 150, // gramas
+        unitOfMeasure: "g",
+        totalCost: 45.0,
+        unitCost: 0.3,
+        lowStockThreshold: 30,
+        movementType: "remove",
+        createdAt: "2025-10-09T12:15:00Z",
+        lastUpdatedAt: new Date("2025-10-17T09:00:00Z"),
+        supplier: {
+            id: 104,
+            name: "ColorMix Pigmentos",
+            contactName: "Rafael Lima",
+            phone: "(19) 97766-5544",
+            email: "vendas@colormix.com",
+            createdAt: new Date("2025-10-15T11:45:00Z"),
+        },
+    },
+    {
+        id: "5",
+        name: "Pote de Vidro 200ml",
+        category: "Embalagem",
+        supplierId: 105,
+        currentStock: 120,
+        unitOfMeasure: "un",
+        totalCost: 180.0,
+        unitCost: 1.5,
+        lowStockThreshold: 40,
+        movementType: "add",
+        createdAt: "2025-10-11T15:00:00Z",
+        lastUpdatedAt: new Date("2025-10-17T18:00:00Z"),
+        supplier: {
+            id: 105,
+            name: "VidroArte Embalagens",
+            contactName: "Beatriz Oliveira",
+            phone: "(47) 96677-8899",
+            email: "comercial@vidroarte.com.br",
+            createdAt: new Date("2025-10-15T11:45:00Z"),
+        },
+    },
+]

@@ -7,56 +7,117 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { OrderDetails } from "./components/chart-sellers";
 import { DataTable } from "../sales/data-table/data-table";
+import { DatePickerWithRange } from "@/components/ui/picker-date-select";
+import { useState } from "react";
+import { addDays, format, startOfMonth, subMonths } from "date-fns";
+import type { DateRange } from "react-day-picker";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 export function Dashboard() {
+
+    const currentDate = new Date()
+    const startDate = startOfMonth(currentDate)
+    const endDate = currentDate
+    const formattedStartDate = format(subMonths(startDate, 0), 'yyyy-MM-dd');
+    const formattedEndDate = format(addDays(endDate, 0), 'yyyy-MM-dd');
+
+    const [startDateToFind, setStartDateToFind] = useState(formattedStartDate)
+    const [endDateToFind, setEndDateToFind] = useState(formattedEndDate)
+
+    const handleDateChange = (period: DateRange | undefined) => {
+        if (period && period.from && period.to) {
+            setStartDateToFind(format(period.from, 'yyyy-MM-dd'))
+            setEndDateToFind(format(period.to, 'yyyy-MM-dd'))
+        }
+    }
+
     return (
         <>
+            <div className="flex justify-end items-center gap-2">
+                <DatePickerWithRange
+                    classNameButton="text-foreground"
+                    onDateChange={handleDateChange}
+                    dateStart={startDateToFind}
+                    dateEnd={endDateToFind}
+                />
+                <Select>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="today">Hoje</SelectItem>
+                        <SelectItem value="week">Última semana</SelectItem>
+                        <SelectItem value="month">Último mês</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-4 bg-card p-2 rounded-3xl shadow">
+                <Card className="bg-primary py-6 text-white">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                        <CardTitle className="text-[18px] font-light">Receita Total</CardTitle>
+                        <div className="bg-white/20 p-1.5 rounded-full text-center items-center ">
+                            <DollarSign className="h-4 w-4 text-white" />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-3xl font-medium">{formatToBRL(dashboardMock.totalRevenue)}</div>
+                        <p className="text-xs text-gray-300">
+                            <Badge className="text-green-200 bg-white/10">+12.5%</Badge> em relação ao mês passado
+                        </p>
+                    </CardContent>
+                </Card>
+                <Card className="bg-[#F6F6F6] py-6">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                        <CardTitle className="text-[18px] font-light">Pedidos</CardTitle>
+                        <div className="bg-primary/10 p-1.5 rounded-full text-center items-center ">
+                            <ShoppingBag className="h-4 w-4" />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-3xl font-medium">+{dashboardMock.totalOrders}</div>
+                        <p className="text-xs text-muted-foreground">
+                            <Badge className="text-green-500 bg-gray-400/10">+15.3%</Badge> em relação ao mês passado
+                        </p>
+                    </CardContent>
+                </Card>
+                <Card className="bg-[#F6F6F6] py-6">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                        <CardTitle className="text-[18px] font-light">Lucro Total</CardTitle>
+                        <div className="bg-primary/10 p-1.5 rounded-full text-center items-center ">
+                            <Activity className="h-4 w-4" />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-3xl font-medium text-green-600">{formatToBRL(dashboardMock.totalProfit)}</div>
+                        <p className="text-xs text-muted-foreground">
+                            <Badge className="text-green-500 bg-gray-400/10">+8.2% </Badge> em relação ao mês passado
+                        </p>
+                    </CardContent>
+                </Card>
+                <Card className="bg-[#F6F6F6] py-6">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                        <CardTitle className="text-[18px] font-light">Despesa Total</CardTitle>
+                        <div className="bg-primary/10 p-1.5 rounded-full text-center items-center ">
+                            <Activity className="h-4 w-4" />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-3xl font-medium text-red-600">{formatToBRL(dashboardMock.totalProfit)}</div>
+                        <p className="text-xs text-muted-foreground">
+                            <Badge className="text-red-500 bg-gray-400/10">+8.2% </Badge> em relação ao mês passado
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
             <div className="grid md:grid-cols-4 gap-6 items-start w-full">
                 <div className="col-span-3 space-y-6">
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 bg-card p-2 rounded-3xl shadow">
-                        <Card className="bg-primary py-6 text-white">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                                <CardTitle className="text-[18px] font-light">Receita Total</CardTitle>
-                                <div className="bg-white/20 p-1.5 rounded-full text-center items-center ">
-                                    <DollarSign className="h-4 w-4 text-white" />
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-3xl font-medium">{formatToBRL(dashboardMock.totalRevenue)}</div>
-                                <p className="text-xs text-gray-300">
-                                    <Badge className="text-green-200 bg-white/10">+12.5%</Badge> em relação ao mês passado
-                                </p>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-[#F6F6F6] py-6">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                                <CardTitle className="text-[18px] font-light">Pedidos</CardTitle>
-                                <div className="bg-primary/10 p-1.5 rounded-full text-center items-center ">
-                                    <ShoppingBag className="h-4 w-4" />
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-3xl font-medium">+{dashboardMock.totalOrders}</div>
-                                <p className="text-xs text-muted-foreground">
-                                    <Badge className="text-green-500 bg-gray-400/10">+15.3%</Badge> em relação ao mês passado
-                                </p>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-[#F6F6F6] py-6">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                                <CardTitle className="text-[18px] font-light">Lucro Total</CardTitle>
-                                <div className="bg-primary/10 p-1.5 rounded-full text-center items-center ">
-                                    <Activity className="h-4 w-4" />
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-3xl font-medium text-green-600">{formatToBRL(dashboardMock.totalProfit)}</div>
-                                <p className="text-xs text-muted-foreground">
-                                    <Badge className="text-green-500 bg-gray-400/10">+8.2% </Badge> em relação ao mês passado
-                                </p>
-                            </CardContent>
-                        </Card>
-                    </div>
                     <div className="w-full flex gap-4">
                         <ProductSalesChart />
                         <OrderDetails />

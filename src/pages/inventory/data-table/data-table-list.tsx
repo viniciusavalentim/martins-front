@@ -26,7 +26,6 @@ import {
   IconChevronsRight,
   IconGripVertical,
   IconLayoutColumns,
-  IconPlus,
 } from "@tabler/icons-react"
 import {
   type ColumnDef,
@@ -73,8 +72,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Search } from "lucide-react"
-import type { ReportRawMaterial } from "@/utils/models"
-import { formatToBRL, getTypeBadge } from "@/utils/helpers"
+import type { RawMaterial } from "@/utils/models"
+import { formatToBRL } from "@/utils/helpers"
+import { AddQuantityInventoryDialog } from "../components/add-quantity-inventory-dialog"
+import { InventoryDialog } from "../components/inventory-dialog"
 
 const columnLabels: Record<string, string> = {
   name: "Nome",
@@ -107,7 +108,7 @@ function DragHandle({ id }: { id: string }) {
   )
 }
 
-const columns: ColumnDef<ReportRawMaterial>[] = [
+const columns: ColumnDef<RawMaterial>[] = [
   {
     id: "drag",
     header: () => null,
@@ -166,24 +167,15 @@ const columns: ColumnDef<ReportRawMaterial>[] = [
       </>
     ),
   },
-  {
-    accessorKey: "movementType",
-    header: "Tipo",
-    cell: ({ row }) => (
-      <>
-        {getTypeBadge(row.original.movementType)}
-      </>
-    ),
-  },
-  {
-    accessorKey: "totalCost",
-    header: "Custo total",
-    cell: ({ row }) => (
-      <>
-        {formatToBRL(row.original.totalCost)}
-      </>
-    ),
-  },
+  // {
+  //   accessorKey: "totalCost",
+  //   header: "Custo total",
+  //   cell: ({ row }) => (
+  //     <>
+  //       {formatToBRL(row.original.totalCost)}
+  //     </>
+  //   ),
+  // },
   {
     accessorKey: "unitCost",
     header: "Custo/unidade",
@@ -241,9 +233,18 @@ const columns: ColumnDef<ReportRawMaterial>[] = [
   //     </form>
   //   ),
   // },
+  {
+    id: "actions",
+    cell: ({ row }) => (
+      <>
+        <AddQuantityInventoryDialog rawMaterial={row.original} />
+        <InventoryDialog rawMaterial={row.original}/>
+      </>
+    ),
+  },
 ]
 
-function DraggableRow({ row }: { row: Row<ReportRawMaterial> }) {
+function DraggableRow({ row }: { row: Row<RawMaterial> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
   })
@@ -268,10 +269,10 @@ function DraggableRow({ row }: { row: Row<ReportRawMaterial> }) {
   )
 }
 
-export function DataTable({
+export function DataTableList({
   data: initialData,
 }: {
-  data: ReportRawMaterial[]
+  data: RawMaterial[]
 }) {
   const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
@@ -399,10 +400,7 @@ export function DataTable({
             </DropdownMenuContent>
 
           </DropdownMenu>
-          <Button variant="default" size="sm">
-            <IconPlus />
-            <span className="hidden lg:inline">Novo insumo</span>
-          </Button>
+          <InventoryDialog />
         </div>
       </div>
       <TabsContent

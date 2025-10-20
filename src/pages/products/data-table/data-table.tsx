@@ -74,10 +74,12 @@ import {
 import {
   Tabs,
   TabsContent,
+  TabsList,
+  TabsTrigger,
   // TabsList,
   // TabsTrigger,
 } from "@/components/ui/tabs"
-import { Calculator, DollarSign, Package, Search } from "lucide-react"
+import { Calculator, Clock, DollarSign, List, Package, Search } from "lucide-react"
 import type { Product } from "@/utils/models"
 import { formatToBRL } from "@/utils/helpers"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -457,13 +459,19 @@ export function DataTable({
       className="w-full flex-col justify-start gap-6"
     >
       <div className="flex items-center justify-between px-4 lg:px-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <Input
-            type="text"
-            placeholder="Buscar..."
-            className="pl-10 pr-3 h-8"
-          />
+        <div className="flex items-center gap-2">
+          <TabsList className="bg-transparent border">
+            <TabsTrigger value="outline" className="data-[state=active]:bg-accent data-[state=active]:text-primary"><List /> Lista</TabsTrigger>
+            <TabsTrigger value="password" className="data-[state=active]:bg-accent data-[state=active]:text-primary"><Clock /> Histórico Produção</TabsTrigger>
+          </TabsList>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Input
+              type="text"
+              placeholder="Buscar..."
+              className="pl-10 pr-3 h-8"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2">

@@ -1,5 +1,8 @@
-import { rawMaterials } from "@/utils/mock"
+import { rawMaterials, reportRawMaterials } from "@/utils/mock"
 import { DataTable } from "./data-table/data-table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { List, Clock } from "lucide-react"
+import { DataTableList } from "./data-table/data-table-list"
 
 export function Inventory() {
     return (
@@ -11,7 +14,33 @@ export function Inventory() {
                 </p>
 
             </div>
-            <DataTable data={rawMaterials} />
+
+            <Tabs defaultValue="list" className="w-full flex-col gap-6">
+                <div className="flex items-center justify-between px-4 lg:px-6">
+                    <TabsList className="bg-transparent border">
+                        <TabsTrigger
+                            value="list"
+                            className="data-[state=active]:bg-accent data-[state=active]:text-primary"
+                        >
+                            <List className="mr-2 size-4" /> Lista
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="history"
+                            className="data-[state=active]:bg-accent data-[state=active]:text-primary"
+                        >
+                            <Clock className="mr-2 size-4" /> Histórico
+                        </TabsTrigger>
+                    </TabsList>
+                </div>
+
+                <TabsContent value="list" className="mt-4">
+                    <DataTableList data={rawMaterials} />
+                </TabsContent>
+
+                <TabsContent value="history" className="mt-4">
+                    <DataTable data={reportRawMaterials} />
+                </TabsContent>
+            </Tabs>
         </>
     )
 }
