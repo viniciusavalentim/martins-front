@@ -1,4 +1,4 @@
-import type { Customer, DashboardData, FinancialSummary, Order, Product, ProductAdditionalCost, ProductMaterial, RawMaterial, ReportProduct, ReportRawMaterial } from "./models";
+import type { Customer, DashboardData, FinancialSummary, OperationalExpense, Order, Product, ProductAdditionalCost, ProductMaterial, RawMaterial, ReportProduct, ReportRawMaterial } from "./models";
 
 export const rawMaterials: RawMaterial[] = [
     {
@@ -257,14 +257,14 @@ export const products: Product[] = [
 
 export const customers: Customer[] = [
     {
-        id: 1,
+        id: "1",
         name: "Carolina Luz",
         email: "carol.luz@email.com",
         phone: "11999999999",
         createdAt: new Date("2025-10-05"),
     },
     {
-        id: 2,
+        id: "2",
         name: "Estúdio Aroma & Bem-Estar",
         email: "contato@aromabemestar.com",
         phone: "11988888888",
@@ -284,13 +284,17 @@ export const orders: Order[] = [
         status: "PENDING",
         items: [
             {
-                id: 1,
+                id: "1",
                 orderId: 1,
-                productId: 1,
+                productId: "1",
                 quantity: 2,
                 unitPrice: 45.0,
                 unitCost: 9.7,
                 product: products[0],
+                name: "Vela Aromática de Lavanda",
+                totalRevenue: 10,
+                expectedProfit: 5,
+                realProfit: 5,
             },
         ],
     },
@@ -305,22 +309,30 @@ export const orders: Order[] = [
         status: "IN_MATURING",
         items: [
             {
-                id: 2,
+                id: "2",
                 orderId: 2,
-                productId: 2,
+                productId: "2",
                 quantity: 1,
                 unitPrice: 48.0,
                 unitCost: 10.41,
                 product: products[1],
+                name: "Vela Aromática de Baunilha",
+                totalRevenue: 228,
+                expectedProfit: 5,
+                realProfit: 5,
             },
             {
-                id: 3,
+                id: "3",
                 orderId: 2,
-                productId: 3,
+                productId: "3",
                 quantity: 2,
                 unitPrice: 55.0,
                 unitCost: 12.09,
                 product: products[2],
+                name: "Vela Aromática de Laranja",
+                totalRevenue: 12,
+                expectedProfit: 5,
+                realProfit: 5,
             },
         ],
     },
@@ -334,13 +346,17 @@ export const orders: Order[] = [
         status: "PENDING",
         items: [
             {
-                id: 4,
+                id: "4",
                 orderId: 3,
-                productId: 1,
+                productId: "1",
                 quantity: 1,
                 unitPrice: 45.0,
                 unitCost: 9.7,
                 product: products[0],
+                name: "Vela Aromática de Laranja",
+                totalRevenue: 22,
+                expectedProfit: 5,
+                realProfit: 5,
             },
         ],
     },
@@ -688,3 +704,39 @@ export const reportProducts: ReportProduct[] = [
         ],
     },
 ];
+
+
+export const operationalExpenses: OperationalExpense[] = [
+    {
+        id: "1",
+        name: "Aluguel do Espaço Comercial",
+        category: "rent",
+        amount: 2500,
+        type: "recurring",
+        recurrenceInterval: "monthly",
+        date: "2025-10-01",
+        notes: "Contrato de 12 meses renovável automaticamente",
+        createdAt: "2025-10-01T10:00:00Z"
+    },
+    {
+        id: "2",
+        name: "Compra de Equipamentos de Produção",
+        category: "equipment",
+        amount: 4800,
+        type: "one-time",
+        date: "2025-09-10",
+        notes: "Inclui fornos e moldes para fabricação de velas",
+        createdAt: "2025-09-10T14:30:00Z"
+    },
+    {
+        id: "3",
+        name: "Campanha de Divulgação no Instagram",
+        category: "marketing",
+        amount: 600,
+        type: "recurring",
+        recurrenceInterval: "monthly",
+        date: "2025-10-05",
+        notes: "Anúncios segmentados para público de São Paulo e região",
+        createdAt: "2025-10-05T09:00:00Z"
+    }
+]

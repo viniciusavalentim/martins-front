@@ -25,7 +25,6 @@ import {
   IconChevronsLeft,
   IconChevronsRight,
   IconLayoutColumns,
-  IconPlus,
 } from "@tabler/icons-react"
 import {
   type ColumnDef,
@@ -74,14 +73,13 @@ import {
 import {
   Tabs,
   TabsContent,
-  // TabsList,
-  // TabsTrigger,
 } from "@/components/ui/tabs"
 import { DollarSign, Search, ShoppingBag, User } from "lucide-react"
 import type { Order } from "@/utils/models"
 import { formatToBRL, getOrderStatusBadge } from "@/utils/helpers"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@radix-ui/react-separator"
+import { SaleDialog } from "../components/sales-dialog"
 
 const columnLabels: Record<string, string> = {
   name: "Nome",
@@ -179,25 +177,6 @@ const OrderDetailCards: React.FC<{ order: Order }> = ({ order }) => {
     </div>
   )
 }
-
-// function DragHandle({ id }: { id: string }) {
-//   const { attributes, listeners } = useSortable({
-//     id,
-//   })
-
-//   return (
-//     <Button
-//       {...attributes}
-//       {...listeners}
-//       variant="ghost"
-//       size="icon"
-//       className="text-muted-foreground size-7 hover:bg-transparent"
-//     >
-//       <IconGripVertical className="text-muted-foreground size-3" />
-//       <span className="sr-only">Drag to reorder</span>
-//     </Button>
-//   )
-// }
 
 const columns: ColumnDef<Order>[] = [
   {
@@ -300,17 +279,7 @@ const columns: ColumnDef<Order>[] = [
         {getOrderStatusBadge(row.original.status)}
       </>
     ),
-  },
-  // {
-  //   id: "actions",
-  //   header: "Ação",
-  //   cell: ({ row }) => (
-  //     <>
-  //       <div className="flex gap-2">
-  //       </div>
-  //     </>
-  //   ),
-  // },
+  }
 ]
 
 function DraggableRow({ row }: { row: Row<Order> }) {
@@ -474,10 +443,8 @@ export function DataTable({
             </DropdownMenuContent>
 
           </DropdownMenu>
-          <Button variant="default" size="sm">
-            <IconPlus />
-            <span className="hidden lg:inline">Nova Venda</span>
-          </Button>
+
+          <SaleDialog />
         </div>
       </div>
       <TabsContent

@@ -99,7 +99,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
 
     const updateRecipeItemId = (index: number, value: string) => {
         const newRecipe = [...productMaterial]
-        newRecipe[index] = { ...newRecipe[index], rawMaterial: rawMaterials.find(x => x.id === value), quantityUsed: 0, id: 0, rawMaterialId: value}
+        newRecipe[index] = { ...newRecipe[index], rawMaterial: rawMaterials.find(x => x.id === value), quantityUsed: 0, id: 0, rawMaterialId: value }
         setProductMaterial(newRecipe)
     }
 
@@ -182,6 +182,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                     lg:max-w-4xl 
                     max-h-[80vh] 
                     flex flex-col 
+                    bg-card
                     overflow-hidden
                 "
             >
@@ -195,9 +196,6 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                 <form onSubmit={handleSubmit} className="
                         flex flex-col flex-1 
                         overflow-y-auto 
-                        scrollbar-thin 
-                        scrollbar-thumb-muted-foreground/30 
-                        scrollbar-thumb-rounded-lg
                         px-1
                         pb-4
                         pr-2
@@ -257,7 +255,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                                                         value={item.rawMaterialId}
                                                         onValueChange={(value) => updateRecipeItemId(index, value)}
                                                     >
-                                                        <SelectTrigger>
+                                                        <SelectTrigger className="min-w-[180px]">
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -328,18 +326,18 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                                                     onChange={(e) => updateAdditionalCost(index, "description", e.target.value)}
                                                 />
                                             </div>
-                                            <div className="w-32 grid gap-2">
+                                            <div className="w-58 grid gap-2">
                                                 <Label className="text-xs">Tipo</Label>
                                                 <Select
                                                     value={cost.type}
                                                     onValueChange={(value) => updateAdditionalCost(index, "type", value)}
                                                 >
-                                                    <SelectTrigger>
+                                                    <SelectTrigger className="min-w-[180px]">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="fixed">Fixo (R$)</SelectItem>
-                                                        <SelectItem value="percentage">Percentual (%)</SelectItem>
+                                                        <SelectItem value="FIXED_VALUE">Fixo (R$)</SelectItem>
+                                                        <SelectItem value="PERCENTAGE">Percentual (%)</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
@@ -377,7 +375,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                                         type="number"
                                         step="0.1"
                                         min="0"
-                                        value={formData.profitMargin}
+                                        value={formData.profitMargin ? Number(formData.profitMargin).toFixed(2) : formData.profitMargin}
                                         onChange={(e) => setFormData({ ...formData, profitMargin: e.target.value })}
                                     />
                                 </div>
@@ -391,7 +389,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Custos Adicionais:</span>
-                                        <span>{formatCurrency(additionalCostsTotal)}</span>
+                                        <span>{formatToBRL(additionalCostsTotal)}</span>
                                     </div>
                                     <Separator />
                                     <div className="flex justify-between font-medium">

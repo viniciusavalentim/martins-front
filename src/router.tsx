@@ -4,6 +4,7 @@ import { Inventory } from "./pages/inventory";
 import { Sales } from "./pages/sales";
 import { Products } from "./pages/products";
 import { Dashboard } from "./pages/dashboard";
+import { Expenses } from "./pages/expense";
 
 export const route = createBrowserRouter([
     {
@@ -32,7 +33,7 @@ export const route = createBrowserRouter([
             },
             {
                 path: "despesas",
-                element: <Products />,
+                element: <Expenses />,
             },
         ],
     },

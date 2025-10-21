@@ -109,7 +109,7 @@ export interface ProductAdditionalCost {
  * Representa um cliente que realiza uma compra.
  */
 export interface Customer {
-    id: number;
+    id: string;
     name: string;
     email?: string;
     phone?: string;
@@ -145,15 +145,31 @@ export interface Order {
  * a precisão do histórico financeiro.
  */
 export interface OrderItem {
-    id: number;
+    id: string;
+    name: string;
     orderId: number;
-    productId: number;
+    productId: string;
     quantity: number;
+    totalRevenue: number;
+    expectedProfit: number;
+    realProfit: number;
     unitPrice: number; // Preço unitário no momento da venda
     unitCost: number; // Custo unitário no momento da venda
 
     // Relacionamento (opcional, para carregar detalhes do produto)
     product?: Product;
+}
+
+export interface OperationalExpense {
+    id: string
+    name: string
+    category: "equipment" | "utilities" | "marketing" | "rent" | "labor" | "other"
+    amount: number
+    type: "one-time" | "recurring"
+    recurrenceInterval?: "daily" | "weekly" | "monthly" | "yearly"
+    date: string
+    notes?: string
+    createdAt: string
 }
 
 
