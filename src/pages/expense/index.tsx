@@ -9,9 +9,9 @@ export function Expenses() {
         <>
             <div className="space-y-4 lg:px-6">
                 <div>
-                    <h1 className="text-2xl font-medium ">Registro de Vendas</h1>
+                    <h1 className="text-2xl font-medium ">Registro de Despesas</h1>
                     <p className="text-muted-foreground mt-1">
-                        Registre vendas com baixa automática de estoque
+                        Registre suas despesas
                     </p>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
