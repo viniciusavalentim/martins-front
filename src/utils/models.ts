@@ -119,7 +119,7 @@ export interface Customer {
 /**
  * Define os possíveis status de um pedido/venda.
  */
-export type OrderStatus = 'PENDING' | 'IN_PRODUCTION' | 'IN_MATURING' | 'CANCELLED' | 'WAITING_DELIVERY';
+export type OrderStatus = 'PENDING' | 'IN_PRODUCTION' | 'IN_MATURING' | 'CANCELLED' | 'WAITING_DELIVERY' | 'COMPLETED';
 
 /**
  * Representa o "cabeçalho" de uma venda ou pedido.
