@@ -14,7 +14,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { IconPlus } from "@tabler/icons-react"
-import { Pencil } from "lucide-react"
+import { Loader2, Pencil } from "lucide-react"
+import { getEnumLabel, getEnumValue, handleApiError } from "@/utils/helpers"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { CreateMaterial } from "@/api/material/storeMaterial"
+import { toast } from "sonner"
+import { EditMaterial } from "@/api/material/updateMaterial"
 
 const units: UnitOfMeasure[] = ["g", "ml", "un"]
 
@@ -35,10 +40,10 @@ export function InventoryDialog({ rawMaterial }: { rawMaterial?: RawMaterial | n
             setFormData({
                 name: rawMaterial.name,
                 quantity: rawMaterial.currentStock.toString(),
-                unit: rawMaterial.unitOfMeasure,
+                unit: getEnumLabel("UnitOfMeasure", rawMaterial.unitOfMeasure) as UnitOfMeasure,
                 totalCost: rawMaterial.totalCost.toString(),
                 category: rawMaterial.category || "",
-                supplier: rawMaterial.supplierId ? `Fornecedor #${rawMaterial.supplierId}` : "",
+                supplier: rawMaterial.supplier ? rawMaterial.supplier?.name : "",
             })
         } else {
             setFormData({
@@ -60,22 +65,92 @@ export function InventoryDialog({ rawMaterial }: { rawMaterial?: RawMaterial | n
         }
         return 0
     }
+    const queryClient = useQueryClient();
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
+    const { mutateAsync: StoreMaterialFn, isPending } = useMutation({
+        mutationFn: CreateMaterial,
+        onSuccess(data) {
+            if (data.success) {
+                toast.success(data.message);
+                queryClient.invalidateQueries({
+                    queryKey: ["FindMaterialQuery"]
+                });
+                setOpenChange(false);
+            } else {
+                toast.error(data.message);
+            }
+        },
+        onError(error) {
+            handleApiError(error);
+        }
+    });
+
+    const { mutateAsync: UpdateMaterial, isPending: isPendingUpdate } = useMutation({
+        mutationFn: EditMaterial,
+        onSuccess(data) {
+            if (data.success) {
+                toast.success(data.message);
+                queryClient.invalidateQueries({
+                    queryKey: ["FindMaterialQuery"]
+                });
+                queryClient.invalidateQueries({
+                    queryKey: ["FindReportMaterialQuery"],
+                });
+                setOpenChange(false);
+            } else {
+                toast.error(data.message);
+            }
+        },
+        onError(error) {
+            handleApiError(error);
+        }
+    })
+
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
 
         const quantity = Number.parseFloat(formData.quantity)
         const totalCost = Number.parseFloat(formData.totalCost)
 
-        if (!formData.name || quantity <= 0 || totalCost < 0) {
+        if (!formData.name || quantity <= 0 || totalCost < 0 || !units) {
             return
         }
 
-        const costPerUnit = calculateCostPerUnit()
-        console.log({
-            ...formData,
-            costPerUnit,
-        })
+        if (!rawMaterial) {
+            try {
+                await StoreMaterialFn({
+                    category: formData.category,
+                    currentStock: quantity,
+                    name: formData.name,
+                    supplier: formData.supplier,
+                    totalCost: totalCost,
+                    unitOfMeasure: getEnumValue("UnitOfMeasure", formData.unit)
+                })
+            } catch (error) {
+                console.log(error);
+            }
+        } else {
+
+            if (!rawMaterial.id) {
+                toast.error("Material não existe para atualizar")
+                return;
+            }
+
+            try {
+                await UpdateMaterial({
+                    materialId: rawMaterial.id,
+                    category: formData.category,
+                    currentStock: quantity,
+                    name: formData.name,
+                    supplier: formData.supplier,
+                    totalCost: totalCost,
+                    unitOfMeasure: getEnumValue("UnitOfMeasure", formData.unit)
+                })
+            } catch (error) {
+                console.log(error);
+            }
+        }
     }
 
     const costPerUnit = calculateCostPerUnit()
@@ -211,7 +286,18 @@ export function InventoryDialog({ rawMaterial }: { rawMaterial?: RawMaterial | n
                         <Button type="button" variant="outline" onClick={() => setOpenChange(false)}>
                             Cancelar
                         </Button>
-                        <Button type="submit">{rawMaterial ? "Atualizar" : "Cadastrar"}</Button>
+                        <Button type="submit" disabled={isPending || isPendingUpdate}>
+                            {isPending || isPendingUpdate ? (
+                                <>
+                                    <Loader2 className="animate-spin" />
+                                    {rawMaterial ? "Atualizar" : "Cadastrar"}
+                                </>
+                            ) : (
+                                <>
+                                    {rawMaterial ? "Atualizar" : "Cadastrar"}
+                                </>
+                            )}
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

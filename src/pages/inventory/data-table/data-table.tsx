@@ -73,7 +73,7 @@ import {
 } from "@/components/ui/table"
 import { Search } from "lucide-react"
 import type { ReportRawMaterial } from "@/utils/models"
-import { formatToBRL, getTypeBadge } from "@/utils/helpers"
+import { formatToBRL, getEnumLabel, getTypeBadge } from "@/utils/helpers"
 
 const columnLabels: Record<string, string> = {
   name: "Nome",
@@ -161,7 +161,7 @@ const columns: ColumnDef<ReportRawMaterial>[] = [
     header: "Quantidade",
     cell: ({ row }) => (
       <>
-        {row.original.currentStock} {row.original.unitOfMeasure}
+        {row.original.currentStock} {getEnumLabel("UnitOfMeasure", row.original.unitOfMeasure)}
       </>
     ),
   },
@@ -170,7 +170,8 @@ const columns: ColumnDef<ReportRawMaterial>[] = [
     header: "Tipo",
     cell: ({ row }) => (
       <>
-        {getTypeBadge(row.original.movementType)}
+      
+        {getTypeBadge(Number(row.original.movementType) == 1 ? "add" : "remove")}
       </>
     ),
   },
@@ -197,7 +198,7 @@ const columns: ColumnDef<ReportRawMaterial>[] = [
     header: "Fornecedor",
     cell: ({ row }) => (
       <>
-        {row.original.supplier?.name}
+        {row.original.supplier?.name || "--"}
       </>
     ),
   },

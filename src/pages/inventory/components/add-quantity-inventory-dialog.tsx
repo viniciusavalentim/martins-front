@@ -14,8 +14,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
-import { PackagePlus } from "lucide-react"
-import { formatToBRL } from "@/utils/helpers"
+import { Loader2, PackagePlus } from "lucide-react"
+import { formatToBRL, getEnumLabel, handleApiError } from "@/utils/helpers"
+import { useMutation } from "@tanstack/react-query"
+import { UpdateMaterialStock } from "@/api/material/updateStock"
+import { queryClient } from "@/lib/queryClient"
 
 export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMaterial }) {
     const [open, setOpenChange] = useState<boolean>(false);
@@ -23,7 +26,30 @@ export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMa
     const [unitCost, setUnitCost] = useState("")
     const [notes, setNotes] = useState("")
 
-    const handleSubmit = (e: React.FormEvent) => {
+
+    const { mutateAsync: UpdateStockMaterialFn, isPending } = useMutation({
+        mutationFn: UpdateMaterialStock,
+        onSuccess(data) {
+            if (data.success) {
+                toast.success(data.message);
+                queryClient.invalidateQueries({
+                    queryKey: ["FindMaterialQuery"]
+                });
+                queryClient.invalidateQueries({
+                    queryKey: ["FindReportMaterialQuery"],
+                });
+                setOpenChange(false);
+            } else {
+                toast.error(data.message);
+            }
+        },
+        onError(error) {
+            handleApiError(error);
+        }
+    });
+
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
         const quantityNum = Number.parseFloat(quantity)
@@ -39,6 +65,24 @@ export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMa
             return
         }
 
+        if (!rawMaterial.id) {
+            toast.error("Material não encontrado");
+            return;
+        }
+
+        const totalCost = !isNaN(quantityNum) && !isNaN(unitCostNum) ? quantityNum * unitCostNum : 0
+
+        try {
+            await UpdateStockMaterialFn({
+                materialId: rawMaterial.id,
+                quantityToAdd: quantityNum,
+                supplier: null,
+                totalCost: totalCost
+            })
+        } catch (error) {
+            console.error(error)
+        }
+        setOpenChange(false);
         setQuantity("")
         setUnitCost("")
         setNotes("")
@@ -48,7 +92,6 @@ export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMa
     const unitCostNum = Number.parseFloat(unitCost)
     const totalCost = !isNaN(quantityNum) && !isNaN(unitCostNum) ? quantityNum * unitCostNum : 0
 
-    // Calculate new weighted average
     const currentTotalValue = rawMaterial.currentStock * rawMaterial.unitCost
     const newTotalValue = currentTotalValue + totalCost
     const newTotalQuantity = rawMaterial.currentStock + quantityNum
@@ -77,20 +120,20 @@ export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMa
                             <div className="space-y-2">
                                 <Label className="text-sm text-muted-foreground">Estoque Atual</Label>
                                 <div className="text-xl font-bold text-primary">
-                                    {rawMaterial.currentStock} {rawMaterial.unitOfMeasure}
+                                    {rawMaterial.currentStock} {getEnumLabel("UnitOfMeasure", rawMaterial.unitOfMeasure)}
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-sm text-muted-foreground">Custo Médio Atual</Label>
                                 <div className="text-xl font-bold text-primary">
-                                    {formatToBRL(rawMaterial.unitCost)}/{rawMaterial.unitOfMeasure}
+                                    {formatToBRL(rawMaterial.unitCost)}/{getEnumLabel("UnitOfMeasure", rawMaterial.unitOfMeasure)}
                                 </div>
                             </div>
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="quantity">
-                                Quantidade a Adicionar ({rawMaterial.unitOfMeasure}) <span className="text-destructive">*</span>
+                                Quantidade a Adicionar ({getEnumLabel("UnitOfMeasure", rawMaterial.unitOfMeasure)}) <span className="text-destructive">*</span>
                             </Label>
                             <Input
                                 id="quantity"
@@ -106,7 +149,7 @@ export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMa
 
                         <div className="space-y-2">
                             <Label htmlFor="unitCost">
-                                Custo Unitário (R$/{rawMaterial.unitOfMeasure}) <span className="text-destructive">*</span>
+                                Custo Unitário (R$/{getEnumLabel("UnitOfMeasure", rawMaterial.unitOfMeasure)}) <span className="text-destructive">*</span>
                             </Label>
                             <Input
                                 id="unitCost"
@@ -129,13 +172,13 @@ export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMa
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Novo estoque total:</span>
                                     <span className="font-medium">
-                                        {newTotalQuantity.toFixed(2)} {rawMaterial.unitOfMeasure}
+                                        {newTotalQuantity.toFixed(2)} {getEnumLabel("UnitOfMeasure", rawMaterial.unitOfMeasure)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between pt-2 border-t">
                                     <span className="text-sm font-medium">Novo custo médio:</span>
                                     <span className="text-lg font-bold text-primary">
-                                        {formatToBRL(newAverageCost)}/{rawMaterial.unitOfMeasure}
+                                        {formatToBRL(newAverageCost)}/{getEnumLabel("UnitOfMeasure", rawMaterial.unitOfMeasure)}
                                     </span>
                                 </div>
                             </div>
@@ -156,7 +199,18 @@ export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMa
                             <Button type="button" variant="outline" onClick={() => setOpenChange(false)}>
                                 Cancelar
                             </Button>
-                            <Button type="submit">Adicionar Estoque</Button>
+                            <Button type="submit" disabled={isPending}>
+                                {isPending ? (
+                                    <>
+                                        <Loader2 className="animate-spin" />
+                                        Adicionar Estoque
+                                    </>
+                                ) : (
+                                    <>
+                                        Adicionar Estoque
+                                    </>
+                                )}
+                            </Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>

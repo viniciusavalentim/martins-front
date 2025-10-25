@@ -73,7 +73,7 @@ import {
 } from "@/components/ui/table"
 import { Search } from "lucide-react"
 import type { RawMaterial } from "@/utils/models"
-import { formatToBRL } from "@/utils/helpers"
+import { formatToBRL, getEnumLabel } from "@/utils/helpers"
 import { AddQuantityInventoryDialog } from "../components/add-quantity-inventory-dialog"
 import { InventoryDialog } from "../components/inventory-dialog"
 
@@ -163,7 +163,7 @@ const columns: ColumnDef<RawMaterial>[] = [
     header: "Quantidade",
     cell: ({ row }) => (
       <>
-        {row.original.currentStock} {row.original.unitOfMeasure}
+        {row.original.currentStock} {getEnumLabel("UnitOfMeasure", row.original.unitOfMeasure)}
       </>
     ),
   },
@@ -190,7 +190,7 @@ const columns: ColumnDef<RawMaterial>[] = [
     header: "Fornecedor",
     cell: ({ row }) => (
       <>
-        {row.original.supplier?.name}
+        {row.original.supplier?.name || "--"}
       </>
     ),
   },
@@ -238,7 +238,7 @@ const columns: ColumnDef<RawMaterial>[] = [
     cell: ({ row }) => (
       <>
         <AddQuantityInventoryDialog rawMaterial={row.original} />
-        <InventoryDialog rawMaterial={row.original}/>
+        <InventoryDialog rawMaterial={row.original} />
       </>
     ),
   },
@@ -293,6 +293,10 @@ export function DataTableList({
     useSensor(KeyboardSensor, {})
   )
 
+  React.useEffect(() => {
+    setData(initialData)
+  }, [initialData])
+
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data?.map(({ id }) => id) || [],
     [data]
@@ -341,10 +345,6 @@ export function DataTableList({
     >
       <div className="flex items-center justify-between px-4 lg:px-6">
         <div className="flex gap-2 items-center">
-          {/* <TabsList className="bg-transparent border">
-            <TabsTrigger value="outline" className="data-[state=active]:bg-accent data-[state=active]:text-primary"><List /> Lista</TabsTrigger>
-            <TabsTrigger value="password" className="data-[state=active]:bg-accent data-[state=active]:text-primary"><Clock /> Histórico</TabsTrigger>
-          </TabsList> */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <Input
@@ -405,139 +405,6 @@ export function DataTableList({
       </div>
       <TabsContent
         value="outline"
-        className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
-      >
-        <div className="overflow-hidden rounded-lg border">
-          <DndContext
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-            sensors={sensors}
-            id={sortableId}
-          >
-            <Table>
-              <TableHeader className="bg-muted sticky top-0 z-10">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id} colSpan={header.colSpan}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                        </TableHead>
-                      )
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows?.length ? (
-                  <SortableContext
-                    items={dataIds}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {table.getRowModel().rows.map((row) => (
-                      <DraggableRow key={row.id} row={row} />
-                    ))}
-                  </SortableContext>
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      No results.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </DndContext>
-        </div>
-        <div className="flex items-center justify-between px-4">
-          <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-            {table.getFilteredSelectedRowModel().rows.length} de{" "}
-            {table.getFilteredRowModel().rows.length} linha(s) selecionadas.
-          </div>
-          <div className="flex w-full items-center gap-8 lg:w-fit">
-            <div className="hidden items-center gap-2 lg:flex">
-              <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                Linhas por página
-              </Label>
-              <Select
-                value={`${table.getState().pagination.pageSize}`}
-                onValueChange={(value) => {
-                  table.setPageSize(Number(value))
-                }}
-              >
-                <SelectTrigger size="sm" className="w-20" id="rows-per-page">
-                  <SelectValue
-                    placeholder={table.getState().pagination.pageSize}
-                  />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[10, 20, 30, 40, 50].map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Página {table.getState().pagination.pageIndex + 1} de{" "}
-              {table.getPageCount()}
-            </div>
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to first page</span>
-                <IconChevronsLeft />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to previous page</span>
-                <IconChevronLeft />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to next page</span>
-                <IconChevronRight />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden size-8 lg:flex"
-                size="icon"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to last page</span>
-                <IconChevronsRight />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </TabsContent>
-      <TabsContent
-        value="password"
         className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
       >
         <div className="overflow-hidden rounded-lg border">
