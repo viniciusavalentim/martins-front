@@ -1,3 +1,4 @@
+import { ProduceProduct } from "@/api/products/produceProduct";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
     AlertDialog,
@@ -14,9 +15,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { queryClient } from "@/lib/queryClient";
+import { getEnumLabel, handleApiError } from "@/utils/helpers";
 import type { Product } from "@/utils/models"
-import { AlertCircle, CheckCircle2, Package, Wrench } from "lucide-react"
+import { useMutation } from "@tanstack/react-query";
+import { AlertCircle, CheckCircle2, Loader2, Package, Wrench } from "lucide-react"
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface ProductParams {
     product: Product;
@@ -26,34 +31,49 @@ export const formatNumber = (value: number) => {
     return Number.isInteger(value) ? value.toString() : value.toFixed(2);
 };
 
+export function UpdateAllEndpoints() {
+    queryClient.invalidateQueries({
+        queryKey: ["FindProductsQuery"]
+    });
+    queryClient.invalidateQueries({
+        queryKey: ["FindReportProductsQuery"]
+    });
+    queryClient.invalidateQueries({
+        queryKey: ["FindMaterialQuery"]
+    });
+    queryClient.invalidateQueries({
+        queryKey: ["FindReportMaterialQuery"],
+    });
+}
+
 
 export function AddProductionProductDialog({ product }: ProductParams) {
+    const [open, setOpenChange] = useState<boolean>(false);
     const [quantity, setQuantity] = useState("")
     const [notes, setNotes] = useState("")
     const [error, setError] = useState("")
-    const [success, setSuccess] = useState("")
+    const [success,] = useState("")
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-        setError("")
-        setSuccess("")
-
-        const qty = product.stockQuantity;
-        if (!qty || qty <= 0) {
-            setError("Quantidade deve ser maior que zero")
-            return
+    const { mutateAsync: produceProductFn, isPending: isPendingProduce } = useMutation({
+        mutationFn: ProduceProduct,
+        onSuccess(data) {
+            if (data.success) {
+                toast.success(data.message);
+                UpdateAllEndpoints();
+                setOpenChange(false);
+            } else {
+                toast.error(data.message);
+            }
+        },
+        onError(error) {
+            handleApiError(error);
         }
-
-        if (!product) {
-            setError("Produto não encontrado")
-            return
-        }
-    }
+    })
 
     if (!product) return null;
 
     const requiredMaterials = product.billOfMaterials.map((item) => {
-        const rawMaterial = item.rawMaterial;
+        const rawMaterial = item.material;
 
         const qty = Number.parseFloat(quantity) || 0;
         const requiredQty = item.quantityUsed * qty;
@@ -69,9 +89,27 @@ export function AddProductionProductDialog({ product }: ProductParams) {
         };
     });
 
+    const handleSubmit = async () => {
+        if (!product) {
+            setError("Produto não encontrado")
+            return
+        }
+
+        try {
+            await produceProductFn({
+                productId: product.id,
+                quantityToProduce: Number.parseFloat(quantity),
+                observation: notes
+            })
+        } catch (error) {
+            console.error(error)
+        }
+
+    }
+
     return (
         <>
-            <AlertDialog>
+            <AlertDialog open={open} onOpenChange={setOpenChange}>
                 <AlertDialogTrigger asChild>
                     <Button
                         variant="outline"
@@ -122,16 +160,14 @@ export function AddProductionProductDialog({ product }: ProductParams) {
                                                 <span className="text-sm">
                                                     Necessário:{" "}
                                                     <strong>
-                                                        {formatNumber(item.required)}
-                                                        {item.unit}
+                                                        {formatNumber(item.required)} {getEnumLabel("UnitOfMeasure", item.unit)}
                                                     </strong>
                                                 </span>
                                                 <span className="text-sm text-muted-foreground">|</span>
                                                 <span className="text-sm">
                                                     Disponível:{" "}
                                                     <strong>
-                                                        {formatNumber(item.available)}
-                                                        {item.unit}
+                                                        {formatNumber(item.available)} {getEnumLabel("UnitOfMeasure", item.unit)}
                                                     </strong>
                                                 </span>
                                                 {item.hasEnough ? (
@@ -174,7 +210,18 @@ export function AddProductionProductDialog({ product }: ProductParams) {
 
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction>Produzir</AlertDialogAction>
+                            <AlertDialogAction onClick={() => handleSubmit()} disabled={isPendingProduce}>
+                                {isPendingProduce ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Produzir
+                                    </>
+                                ) : (
+                                    <>
+                                        Produzir
+                                    </>
+                                )}
+                            </AlertDialogAction>
                         </AlertDialogFooter>
                     </form>
                 </AlertDialogContent>

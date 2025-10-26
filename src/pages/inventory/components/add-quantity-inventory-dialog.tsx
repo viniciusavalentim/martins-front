@@ -18,7 +18,7 @@ import { Loader2, PackagePlus } from "lucide-react"
 import { formatToBRL, getEnumLabel, handleApiError } from "@/utils/helpers"
 import { useMutation } from "@tanstack/react-query"
 import { UpdateMaterialStock } from "@/api/material/updateStock"
-import { queryClient } from "@/lib/queryClient"
+import { UpdateAllEndpoints } from "@/pages/products/components/production-product-dialog"
 
 export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMaterial }) {
     const [open, setOpenChange] = useState<boolean>(false);
@@ -32,12 +32,7 @@ export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMa
         onSuccess(data) {
             if (data.success) {
                 toast.success(data.message);
-                queryClient.invalidateQueries({
-                    queryKey: ["FindMaterialQuery"]
-                });
-                queryClient.invalidateQueries({
-                    queryKey: ["FindReportMaterialQuery"],
-                });
+                UpdateAllEndpoints();
                 setOpenChange(false);
             } else {
                 toast.error(data.message);

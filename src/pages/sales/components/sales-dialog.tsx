@@ -1,7 +1,5 @@
-"use client"
-
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -18,19 +16,27 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { AlertCircle, CheckCircle2, Plus, Trash2, Package, AlertTriangle, UserPlus } from "lucide-react"
+import { AlertCircle, CheckCircle2, Plus, Trash2, Package, AlertTriangle, UserPlus, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import type { OrderItem, OrderStatus, Customer } from "@/utils/models"
-import { customers, products } from "@/utils/mock"
+import type { OrderItem, OrderStatus, Customer, Product, RawMaterial } from "@/utils/models"
 import { IconPlus } from "@tabler/icons-react"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { CreateCustomer } from "@/api/sales/createCustomer"
+import { toast } from "sonner"
+import { handleApiError } from "@/utils/helpers"
+import { queryClient } from "@/lib/queryClient"
+import { FindCustomers } from "@/api/sales/findCustomers"
+import { CreateSale } from "@/api/sales/createSale"
+import { useStore } from "@/context/StoreContext"
 
 interface SaleDialogProps {
-    open?: boolean
-    onOpenChange?: (open: boolean) => void
 }
 
-export function SaleDialog({ open, onOpenChange }: SaleDialogProps) {
+
+export function SaleDialog({ }: SaleDialogProps) {
+    const { Products, Materials } = useStore();
+    const [open, setOpenChange] = useState<boolean>(false);
     const [items, setItems] = useState<Omit<OrderItem, "id" | "orderId">[]>([])
     const [currentItem, setCurrentItem] = useState({
         productId: "",
@@ -59,30 +65,78 @@ export function SaleDialog({ open, onOpenChange }: SaleDialogProps) {
         }).format(value)
     }
 
+    const { data: findCustomersQuery, isPending: isPendingCustomer } = useQuery({
+        queryKey: ["FindCustomersQuery"],
+        queryFn: () => FindCustomers({ searchText: "" }),
+    });
+
+    const { mutateAsync: createCustomerFn, isPending: isPendingCreateCustomer } = useMutation({
+        mutationFn: CreateCustomer,
+        onSuccess(data) {
+            if (data.success) {
+                toast.success(data.message);
+                queryClient.invalidateQueries({
+                    queryKey: ["FindCustomersQuery"]
+                });
+            } else {
+                toast.error(data.message);
+            }
+        },
+        onError(error) {
+            handleApiError(error);
+        }
+    });
+
+    const { mutateAsync: createSaleFn, isPending: isPendingCreateSale } = useMutation({
+        mutationFn: CreateSale,
+        onSuccess(data) {
+            if (data.success) {
+                toast.success(data.message);
+                queryClient.invalidateQueries({
+                    queryKey: ["FindSalesQuery"]
+                });
+                setOpenChange(false);
+            } else {
+                toast.error(data.message || "Não foi possível criar o cliente.");
+            }
+        },
+        onError(error) {
+            handleApiError(error);
+        }
+    });
+
     const handleProductChange = (productId: string) => {
-        const product = products.find(product => product.id === productId)
+        const product = Products?.find(product => product.id === productId)
         setCurrentItem({
             ...currentItem,
             productId,
             unitPrice: product ? product.sellingPrice.toString() : "",
         })
-        if (product) {
-            const availability = checkProductAvailability(productId, Number.parseFloat(currentItem.quantity) || 1)
-            if (availability)
-                setAvailabilityStatus(availability)
-        }
     }
 
     const handleQuantityChange = (quantity: string) => {
-        setCurrentItem({ ...currentItem, quantity })
-        if (currentItem.productId) {
-            const availability = checkProductAvailability(currentItem.productId, Number.parseFloat(quantity) || 1)
-            if (availability)
-                setAvailabilityStatus(availability)
-        }
-    }
+        setCurrentItem(prev => ({ ...prev, quantity }));
+    };
 
-    const handleAddCustomer = () => {
+    useEffect(() => {
+        const quantity = Number.parseFloat(currentItem.quantity) || 0;
+        const productId = currentItem.productId;
+
+        if (productId && quantity > 0) {
+            const availability = checkProductAvailability(
+                productId,
+                quantity,
+                Products,
+                Materials
+            );
+            setAvailabilityStatus(availability);
+        } else {
+            setAvailabilityStatus(null);
+        }
+    }, [currentItem.productId, currentItem.quantity, Products, Materials]);
+
+
+    const handleAddCustomer = async () => {
         if (!newCustomer.name.trim()) return
 
         const customer: Customer = {
@@ -93,13 +147,19 @@ export function SaleDialog({ open, onOpenChange }: SaleDialogProps) {
             createdAt: new Date("2025-10-05"),
         }
 
+        try {
+            await createCustomerFn(customer);
+        } catch (error) {
+            console.error(error);
+        }
+
         setCustomerId(customer.id.toString())
         setNewCustomer({ name: "", email: "", phone: "" })
         setShowNewCustomer(false)
     }
 
     const handleAddItem = () => {
-        const product = products.find(product => product.id === currentItem.productId)
+        const product = Products?.find(product => product.id === currentItem.productId)
         const quantity = Number.parseFloat(currentItem.quantity)
         const unitPrice = Number.parseFloat(currentItem.unitPrice)
 
@@ -144,45 +204,29 @@ export function SaleDialog({ open, onOpenChange }: SaleDialogProps) {
         e.preventDefault()
 
         if (items.length === 0) {
+            toast.error("Adicione pelo menos um item ao pedido")
             return
         }
-
-        // Check if any items need production (only if status is not PENDING)
-        // if (status !== "PENDING") {
-        //     for (const item of items) {
-        //         const availability = checkProductAvailability(item.productId, item.quantity)
-        //         if (availability.status === "can_produce") {
-        //             const result = produceProduct(item.productId, item.quantity)
-        //             if (!result.success) {
-        //                 alert(`Erro ao produzir ${item.name}: ${result.message}`)
-        //                 return
-        //             }
-        //         }
-        //     }
-        // }
-
-        // Calculate totals
-        // const totalAmount = items.reduce((sum, item) => sum + item.totalRevenue, 0)
-        // const totalCost = items.reduce((sum, item) => sum + item.unitCost * item.quantity, 0)
-        // const profit = totalAmount - totalCost
-
-        // // Create order items with proper IDs
-        // const orderItems: OrderItem[] = items.map((item) => ({
-        //     ...item,
-        //     id: crypto.randomUUID(),
-        //     orderId: 0,
-        // }))
-
-        // const result = addOrder({
-        //     customerId: customerId ? Number.parseInt(customerId) : undefined,
-        //     totalAmount,
-        //     profit,
-        //     totalCost,
-        //     status,
-        //     items: orderItems,
-        //     notes: notes || undefined,
-        // })
-
+        try {
+            await createSaleFn({
+                customerId: customerId ? customerId : undefined,
+                orderStatus: (() => {
+                    switch (status) {
+                        case "PENDING": return 1
+                        case "IN_PRODUCTION": return 2
+                        case "IN_MATURING": return 3
+                        case "WAITING_DELIVERY": return 4
+                        case "CANCELLED": return 5
+                        case "COMPLETED": return 6
+                        default: return 1
+                    }
+                })(),
+                orderItems: items,
+                observations: notes,
+            })
+        } catch (error) {
+            console.error(error)
+        }
 
         setItems([])
         setCurrentItem({
@@ -196,7 +240,7 @@ export function SaleDialog({ open, onOpenChange }: SaleDialogProps) {
         setAvailabilityStatus(null)
     }
 
-    const selectedProduct = currentItem.productId ? products.find(product => product.id === currentItem.productId) : null
+    const selectedProduct = currentItem.productId ? Products?.find(product => product.id === currentItem.productId) : null
     const currentQuantity = Number.parseFloat(currentItem.quantity) || 0
     const currentUnitPrice = Number.parseFloat(currentItem.unitPrice) || 0
 
@@ -204,7 +248,7 @@ export function SaleDialog({ open, onOpenChange }: SaleDialogProps) {
     const cartProfit = items.reduce((sum, item) => sum + item.realProfit, 0)
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange} >
+        <Dialog open={open} onOpenChange={setOpenChange} >
             <DialogTrigger asChild>
                 <Button variant="default" size="sm">
                     <IconPlus />
@@ -249,12 +293,20 @@ export function SaleDialog({ open, onOpenChange }: SaleDialogProps) {
                                                         <SelectValue placeholder="Selecione um cliente" />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="none">Sem cliente</SelectItem>
-                                                        {customers.map((customer) => (
-                                                            <SelectItem key={customer.id} value={customer.id.toString()}>
-                                                                {customer.name}
-                                                            </SelectItem>
-                                                        ))}
+                                                        {isPendingCustomer ? (
+                                                            <div className="flex items-center justify-center p-2">
+                                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <SelectItem value="none">Sem cliente</SelectItem>
+                                                                {findCustomersQuery?.data?.map((customer) => (
+                                                                    <SelectItem key={customer.id} value={customer.id.toString()}>
+                                                                        {customer.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </>
+                                                        )}
                                                     </SelectContent>
                                                 </Select>
                                                 <Button type="button" variant="outline" size="icon" onClick={() => setShowNewCustomer(true)}>
@@ -311,6 +363,7 @@ export function SaleDialog({ open, onOpenChange }: SaleDialogProps) {
                                                 <SelectItem value="IN_MATURING">Em Maturação</SelectItem>
                                                 <SelectItem value="WAITING_DELIVERY">Aguardando Entrega</SelectItem>
                                                 <SelectItem value="CANCELLED">Cancelado</SelectItem>
+                                                <SelectItem value="COMPLETED">Concluído</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -327,10 +380,10 @@ export function SaleDialog({ open, onOpenChange }: SaleDialogProps) {
                                                 <SelectValue placeholder="Selecione um produto" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {products.length === 0 ? (
+                                                {Products?.length === 0 ? (
                                                     <div className="p-2 text-sm text-muted-foreground">Nenhum produto cadastrado</div>
                                                 ) : (
-                                                    products.map((product) => (
+                                                    Products?.map((product) => (
                                                         <SelectItem key={product.id} value={product.id}>
                                                             {product.name} - {formatCurrency(product.sellingPrice)}
                                                         </SelectItem>
@@ -503,26 +556,60 @@ export function SaleDialog({ open, onOpenChange }: SaleDialogProps) {
 }
 
 
-const checkProductAvailability = (productId: string, quantity: number) => {
-    console.log(quantity)
-    const product = products.find((p) => p.id === productId)
+const checkProductAvailability = (
+    productId: string,
+    quantityDesired: number,
+    products: Product[] | null,
+    materials: RawMaterial[] | null
+): { status: "available" | "insufficient" | "can_produce"; message: string; missingInsumos?: string[] } => {
+
+    const product = products?.find((p) => p.id === productId);
     if (!product) {
-        return { status: "insufficient" as const, message: "Produto não encontrado" }
+        return { status: "insufficient", message: "Produto não encontrado" };
     }
 
-    const insufficientInsumos: string[] = []
-    const missingInsumos: string[] = []
-
-    if (insufficientInsumos.length > 0) {
+    if (product.stockQuantity >= quantityDesired) {
         return {
-            status: "insufficient" as const,
-            message: `Estoque de insumos insuficiente para produzir`,
-            missingInsumos,
+            status: "available",
+            message: "Produto disponível para venda",
+        };
+    }
+
+    const quantityToProduce = quantityDesired - product.stockQuantity;
+    const insufficientInsumos: string[] = [];
+
+    if (!materials) {
+        return { status: "insufficient", message: "Lista de insumos não carregada." };
+    }
+
+    for (const bomItem of product.billOfMaterials) {
+        const liveMaterial = materials.find(m => m.id === bomItem.materialId);
+
+        if (!liveMaterial) {
+            const materialName = bomItem.material?.name || `ID ${bomItem.materialId}`;
+            insufficientInsumos.push(`${materialName} (Insumo não encontrado)`);
+            continue;
+        }
+
+        const materialNeeded = bomItem.quantityUsed * quantityToProduce;
+
+        if (liveMaterial.currentStock < materialNeeded) {
+            insufficientInsumos.push(
+                `${liveMaterial.name} (Necessário: ${materialNeeded}, Disponível: ${liveMaterial.currentStock})`
+            );
         }
     }
 
-    return {
-        status: "available" as const,
-        message: "Produto disponível para venda",
+    if (insufficientInsumos.length > 0) {
+        return {
+            status: "insufficient",
+            message: `Estoque de produto e insumos insuficiente. ${quantityToProduce} unidade(s) precisa(m) ser produzida(s).`,
+            missingInsumos: insufficientInsumos,
+        };
     }
+
+    return {
+        status: "can_produce",
+        message: "Produto será produzido automaticamente",
+    };
 }

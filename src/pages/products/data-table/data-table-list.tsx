@@ -76,7 +76,7 @@ import {
 } from "@/components/ui/tabs"
 import { Calculator, DollarSign, Package, Search } from "lucide-react"
 import type { Product } from "@/utils/models"
-import { formatToBRL } from "@/utils/helpers"
+import { formatToBRL, getEnumLabel } from "@/utils/helpers"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@radix-ui/react-separator"
 import { AddProductionProductDialog } from "../components/production-product-dialog"
@@ -116,9 +116,9 @@ const ProductDetailCards: React.FC<{ product: Product }> = ({ product }) => {
               return (
                 <div key={index} className="flex justify-between text-sm">
                   <span>
-                    {item?.rawMaterial?.name} - {item?.quantityUsed} {item.rawMaterial?.unitOfMeasure}
+                    {item?.material?.name} - {item?.quantityUsed} {getEnumLabel("UnitOfMeasure", item.material?.unitOfMeasure || "")}
                   </span>
-                  <span className="font-medium">{formatToBRL(((item?.rawMaterial?.unitCost ? item?.rawMaterial?.unitCost : 0) * item.quantityUsed))}</span>
+                  <span className="font-medium">{formatToBRL(((item?.material?.unitCost ? item?.material?.unitCost : 0) * item.quantityUsed))}</span>
                 </div>
               )
             })}
@@ -148,7 +148,7 @@ const ProductDetailCards: React.FC<{ product: Product }> = ({ product }) => {
                     <span>
                       {cost.description}{" "}
                       <Badge variant="outline" className="ml-2">
-                        {cost.type === "FIXED_VALUE" ? "Fixo" : `${cost.value}%`}
+                        {cost.type == String(1) ? "Fixo" : `${cost.value}%`}
                       </Badge>
                     </span>
                     <span className="font-medium">{formatToBRL(cost.value)}</span>
@@ -324,7 +324,7 @@ const columns: ColumnDef<Product>[] = [
     header: "Estoque",
     cell: ({ row }) => (
       <>
-        <span className="text-blue-800 font-medium">
+        <span className={`${row.original.stockQuantity == 0 ? "text-red-600" : "text-blue-800"} font-medium`}>
           {row.original.stockQuantity}
         </span>
       </>
@@ -406,6 +406,10 @@ export function DataTableList({
     () => data?.map(({ id }) => id) || [],
     [data]
   )
+
+  React.useEffect(() => {
+    setData(initialData)
+  }, [initialData])
 
   const table = useReactTable({
     data,

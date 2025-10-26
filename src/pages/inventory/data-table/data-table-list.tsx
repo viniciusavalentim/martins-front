@@ -163,7 +163,9 @@ const columns: ColumnDef<RawMaterial>[] = [
     header: "Quantidade",
     cell: ({ row }) => (
       <>
-        {row.original.currentStock} {getEnumLabel("UnitOfMeasure", row.original.unitOfMeasure)}
+        <span className={`${row.original.currentStock == 0 ? "text-red-600" : ""} font-medium`}>
+          {row.original.currentStock} {getEnumLabel("UnitOfMeasure", row.original.unitOfMeasure)}
+        </span>
       </>
     ),
   },
@@ -181,7 +183,7 @@ const columns: ColumnDef<RawMaterial>[] = [
     header: "Custo/unidade",
     cell: ({ row }) => (
       <>
-        {formatToBRL(row.original.totalCost / row.original.currentStock)}
+        {formatToBRL(row.original.unitCost)}
       </>
     ),
   },

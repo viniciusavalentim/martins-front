@@ -72,13 +72,13 @@ export interface Product {
  * Conecta um Produto a uma Matéria-Prima e especifica a quantidade.
  */
 export interface ProductMaterial {
-    id: number;
-    productId: number;
-    rawMaterialId: string;
+    id: string;
+    productId: string;
+    materialId: string;
     quantityUsed: number;
 
     // Relacionamento (opcional, para carregar detalhes da matéria-prima)
-    rawMaterial?: RawMaterial;
+    material?: RawMaterial;
 }
 
 /**
@@ -92,8 +92,8 @@ export type CostType = 'FIXED_VALUE' | 'PERCENTAGE';
  * como mão de obra, marketing, taxas e a margem de lucro.
  */
 export interface ProductAdditionalCost {
-    id: number;
-    productId: number;
+    id: string;
+    productId: string;
     description: string;
     type: CostType;
     value: number; // Pode ser R$ 5.00 (para FIXED_VALUE) ou 10.00 (para 10% em PERCENTAGE)

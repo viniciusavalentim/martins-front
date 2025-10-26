@@ -20,6 +20,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { CreateMaterial } from "@/api/material/storeMaterial"
 import { toast } from "sonner"
 import { EditMaterial } from "@/api/material/updateMaterial"
+import { UpdateAllEndpoints } from "@/pages/products/components/production-product-dialog"
 
 const units: UnitOfMeasure[] = ["g", "ml", "un"]
 
@@ -72,9 +73,7 @@ export function InventoryDialog({ rawMaterial }: { rawMaterial?: RawMaterial | n
         onSuccess(data) {
             if (data.success) {
                 toast.success(data.message);
-                queryClient.invalidateQueries({
-                    queryKey: ["FindMaterialQuery"]
-                });
+                UpdateAllEndpoints();
                 setOpenChange(false);
             } else {
                 toast.error(data.message);

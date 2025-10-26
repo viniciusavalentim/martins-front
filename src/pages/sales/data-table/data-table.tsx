@@ -76,10 +76,14 @@ import {
 } from "@/components/ui/tabs"
 import { DollarSign, Search, ShoppingBag, User } from "lucide-react"
 import type { Order } from "@/utils/models"
-import { formatToBRL, getOrderStatusBadge } from "@/utils/helpers"
+import { formatToBRL, getOrderStatusBadge, handleApiError } from "@/utils/helpers"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@radix-ui/react-separator"
 import { SaleDialog } from "../components/sales-dialog"
+import { useMutation } from "@tanstack/react-query"
+import { UpdateSaleStatus } from "@/api/sales/updateStatus"
+import { queryClient } from "@/lib/queryClient"
+import { toast } from "sonner"
 
 const columnLabels: Record<string, string> = {
   name: "Nome",
@@ -178,109 +182,59 @@ const OrderDetailCards: React.FC<{ order: Order }> = ({ order }) => {
   )
 }
 
-const columns: ColumnDef<Order>[] = [
-  {
-    id: 'expander',
-    header: () => null,
-    cell: ({ row }) => {
-      return row.getCanExpand() ? (
-        <button
-          {...{
-            onClick: row.getToggleExpandedHandler(),
-            style: { cursor: 'pointer' },
-          }}
-        >
-          <Badge variant="outline" className="text-muted-foreground p-2">
-            {row.getIsExpanded() ? <IconChevronDown size={18} /> : <IconChevronRight size={18} />}
-          </Badge>
-        </button>
-      ) : null
-    },
-  },
-  {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "orderDate",
-    header: "Data",
-    cell: ({ row }) => {
-      const date = new Date(row.original.orderDate);
-      const formattedDate = date.toLocaleDateString('pt-BR');
-      const formattedTime = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      return `${formattedDate} às ${formattedTime}`;
-    },
-  },
-  {
-    accessorKey: "items",
-    header: "Qtd. Produtos",
-    cell: ({ row }) => (
-      <>
-        {row.original.items.length}
-      </>
-    ),
-  },
-  {
-    accessorKey: "totalCost",
-    header: "Custo total Venda",
-    cell: ({ row }) => (
-      <>
-        {formatToBRL(row.original.totalCost)}
-      </>
-    ),
-  },
-  {
-    accessorKey: "totalAmount",
-    header: "Receita",
-    cell: ({ row }) => (
-      <>
-        {formatToBRL(row.original.totalAmount)}
-      </>
-    ),
-  },
-  {
-    accessorKey: "profit",
-    header: "Lucro Liquido",
-    cell: ({ row }) => (
-      <>
-        <span className="text-green-600 font-medium">
-          {formatToBRL(row.original.profit)}
-        </span>
-      </>
-    ),
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <>
-        {getOrderStatusBadge(row.original.status)}
-      </>
-    ),
+function getStatusText(statusNumber: number): string {
+  switch (statusNumber) {
+    case 1:
+      return "PENDING"
+    case 2:
+      return "IN_PRODUCTION"
+    case 3:
+      return "IN_MATURING"
+    case 4:
+      return "WAITING_DELIVERY"
+    case 5:
+      return "CANCELLED"
+    case 6:
+      return "COMPLETED"
+    default:
+      return "PENDING"
   }
-]
+}
+
+const StatusCell = ({ row, onUpdate }: { row: any; onUpdate: (id: string, status: string) => void }) => {
+  const [isEditing, setIsEditing] = React.useState(false)
+  const [selectedStatus, setSelectedStatus] = React.useState<string | number>(getStatusText(row.original.status))
+
+  const handleChange = (value: string) => {
+    setSelectedStatus(value)
+    setIsEditing(false)
+    onUpdate(row.original.id, value)
+  }
+
+  return (
+    <>
+      {isEditing ? (
+        <Select value={String(selectedStatus)} onValueChange={handleChange}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Selecione o status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="PENDING">Pendente</SelectItem>
+            <SelectItem value="IN_PRODUCTION">Em Produção</SelectItem>
+            <SelectItem value="IN_MATURING">Em Maturação</SelectItem>
+            <SelectItem value="WAITING_DELIVERY">Aguardando Entrega</SelectItem>
+            <SelectItem value="CANCELLED">Cancelado</SelectItem>
+            <SelectItem value="COMPLETED">Concluído</SelectItem>
+          </SelectContent>
+        </Select>
+      ) : (
+        <div onClick={() => setIsEditing(true)} className="cursor-pointer">
+          {getOrderStatusBadge(selectedStatus)}
+        </div>
+      )}
+    </>
+  )
+}
 
 function DraggableRow({ row }: { row: Row<Order> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
@@ -340,10 +294,120 @@ export function DataTable({
     useSensor(KeyboardSensor, {})
   )
 
+  React.useEffect(() => {
+    setData(initialData)
+  }, [initialData])
+
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data?.map(({ id }) => id) || [],
     [data]
   )
+
+
+  const columns: ColumnDef<Order>[] = [
+    {
+      id: 'expander',
+      header: () => null,
+      cell: ({ row }) => {
+        return row.getCanExpand() ? (
+          <button
+            {...{
+              onClick: row.getToggleExpandedHandler(),
+              style: { cursor: 'pointer' },
+            }}
+          >
+            <Badge variant="outline" className="text-muted-foreground p-2">
+              {row.getIsExpanded() ? <IconChevronDown size={18} /> : <IconChevronRight size={18} />}
+            </Badge>
+          </button>
+        ) : null
+      },
+    },
+    {
+      id: "select",
+      header: ({ table }) => (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
+          />
+        </div>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        </div>
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "orderDate",
+      header: "Data",
+      cell: ({ row }) => {
+        const date = new Date(row.original.orderDate);
+        const formattedDate = date.toLocaleDateString('pt-BR');
+        const formattedTime = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        return `${formattedDate} às ${formattedTime}`;
+      },
+    },
+    {
+      accessorKey: "items",
+      header: "Qtd. Produtos",
+      cell: ({ row }) => (
+        <>
+          {row.original.items.length}
+        </>
+      ),
+    },
+    {
+      accessorKey: "totalCost",
+      header: "Custo total Venda",
+      cell: ({ row }) => (
+        <>
+          {formatToBRL(row.original.totalCost)}
+        </>
+      ),
+    },
+    {
+      accessorKey: "totalAmount",
+      header: "Receita",
+      cell: ({ row }) => (
+        <>
+          {formatToBRL(row.original.totalAmount)}
+        </>
+      ),
+    },
+    {
+      accessorKey: "profit",
+      header: "Lucro Liquido",
+      cell: ({ row }) => (
+        <>
+          <span className="text-green-600 font-medium">
+            {formatToBRL(row.original.profit)}
+          </span>
+        </>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => (
+        <StatusCell
+          row={row}
+          onUpdate={(id, newStatus) => handleStatusUpdate(id, newStatus)}
+        />
+      ),
+    }
+  ]
 
   const table = useReactTable({
     data,
@@ -383,6 +447,45 @@ export function DataTable({
       })
     }
   }
+
+  const { mutateAsync: updateStatustFn, isPending: isPendingUpdateStatus } = useMutation({
+    mutationFn: UpdateSaleStatus,
+    onSuccess(data) {
+      if (data.success) {
+        toast.success(data.message);
+        queryClient.invalidateQueries({
+          queryKey: ["FindSalesQuery"]
+        });
+      } else {
+        toast.error(data.message);
+      }
+    },
+    onError(error) {
+      handleApiError(error);
+    }
+  });
+
+  const handleStatusUpdate = React.useCallback(async (id: string, newStatus: string) => {
+    try {
+      await updateStatustFn({
+        orderId: id,
+        status: (() => {
+          switch (newStatus) {
+            case "PENDING": return 1
+            case "IN_PRODUCTION": return 2
+            case "IN_MATURING": return 3
+            case "WAITING_DELIVERY": return 4
+            case "CANCELLED": return 5
+            case "COMPLETED": return 6
+            default: return 1
+          }
+        })(),
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar o status da venda:", error);
+    }
+  }, [updateStatustFn]);
+
 
   return (
     <Tabs
@@ -579,21 +682,6 @@ export function DataTable({
             </div>
           </div>
         </div>
-      </TabsContent>
-      <TabsContent
-        value="past-performance"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-      <TabsContent value="key-personnel" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-      <TabsContent
-        value="focus-documents"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
       </TabsContent>
     </Tabs>
   )

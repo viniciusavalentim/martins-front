@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { z } from "zod";
-import type { OrderStatus } from "./models";
+import type { Order } from "./models";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
 
@@ -59,36 +59,48 @@ export const getTypeBadgeProduct = (type: string) => {
     }
 }
 
-export const getOrderStatusBadge = (status: OrderStatus) => {
+export const getOrderStatusBadge = (status: string | number) => {
     switch (status) {
         case "PENDING":
+        case 1:
             return (
                 <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
                     Pendente
                 </Badge>
             )
         case "IN_PRODUCTION":
+        case 2:
             return (
                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                     Em Produção
                 </Badge>
             )
         case "IN_MATURING":
+        case 3:
             return (
                 <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
                     Em Maturação
                 </Badge>
             )
         case "WAITING_DELIVERY":
+        case 4:
             return (
                 <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
                     Aguardando Entrega
                 </Badge>
             )
         case "CANCELLED":
+        case 5:
             return (
                 <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
                     Cancelado
+                </Badge>
+            )
+        case "COMPLETEDd":
+        case 6:
+            return (
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                    Concluído
                 </Badge>
             )
         default:
@@ -117,7 +129,7 @@ export function getEnumLabel(enumType: EnumType, value: number | string): string
                 case 1: return "g";
                 case 2: return "m";
                 case 3: return "un";
-                default: return "Desconhecido";
+                default: return "";
             }
 
         // --- Tipo de Custo ---
@@ -136,6 +148,7 @@ export function getEnumLabel(enumType: EnumType, value: number | string): string
                 case 3: return "Em Maturação";
                 case 4: return "Cancelado";
                 case 5: return "Aguardando Entrega";
+                case 6: return "Completo";
                 default: return "Desconhecido";
             }
 
@@ -239,5 +252,37 @@ export const handleApiError = (error: unknown) => {
         toast.error(error.response.data.error)
     } else {
         toast.error("Ocorreu um erro")
+    }
+}
+
+export interface MonthlySummary {
+    totalRevenue: number
+    totalProfit: number
+    salesCount: number
+    averageProfitMargin: number
+}
+
+export function calculateMonthlySummary(orders: Order[]): MonthlySummary {
+    const now = new Date()
+    const currentMonth = now.getMonth()
+    const currentYear = now.getFullYear()
+
+    const monthlyOrders = orders.filter(order => {
+        const orderDate = new Date(order.orderDate)
+        return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear
+    })
+
+    const totalRevenue = monthlyOrders.reduce((acc, order) => acc + order.totalAmount, 0)
+    const totalProfit = monthlyOrders.reduce((acc, order) => acc + order.profit, 0)
+    const salesCount = monthlyOrders.length
+
+    const averageProfitMargin =
+        totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0
+
+    return {
+        totalRevenue,
+        totalProfit,
+        salesCount,
+        averageProfitMargin: Number(averageProfitMargin.toFixed(2))
     }
 }

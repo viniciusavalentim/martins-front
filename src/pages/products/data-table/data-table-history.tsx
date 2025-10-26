@@ -114,9 +114,9 @@ const ProductDetailCards: React.FC<{ product: ReportProduct }> = ({ product }) =
               return (
                 <div key={index} className="flex justify-between text-sm">
                   <span>
-                    {item?.rawMaterial?.name} - {item?.quantityUsed} {item.rawMaterial?.unitOfMeasure}
+                    {item?.material?.name} - {item?.quantityUsed} {item.material?.unitOfMeasure}
                   </span>
-                  <span className="font-medium">{formatToBRL(((item?.rawMaterial?.unitCost ? item?.rawMaterial?.unitCost : 0) * item.quantityUsed))}</span>
+                  <span className="font-medium">{formatToBRL(((item?.material?.unitCost ? item?.material?.unitCost : 0) * item.quantityUsed))}</span>
                 </div>
               )
             })}
@@ -303,7 +303,7 @@ const columns: ColumnDef<ReportProduct>[] = [
     header: "Tipo",
     cell: ({ row }) => (
       <>
-        {getTypeBadgeProduct(row.original.movementType)}
+        {getTypeBadgeProduct(row.original.movementType == String(1) ? "sell" : "production")}
       </>
     ),
   },
@@ -378,6 +378,10 @@ export function DataTableHistory({
     useSensor(TouchSensor, {}),
     useSensor(KeyboardSensor, {})
   )
+
+  React.useEffect(() => {
+    setData(initialData)
+  }, [initialData])
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data?.map(({ id }) => id) || [],

@@ -13,22 +13,30 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Trash2, Calculator, Pencil } from "lucide-react"
+import { Plus, Trash2, Calculator, Pencil, Loader2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import type { Product, ProductAdditionalCost, ProductMaterial } from "@/utils/models"
-import { rawMaterials } from "@/utils/mock"
-import { formatToBRL } from "@/utils/helpers"
+import { formatToBRL, getEnumLabel, handleApiError } from "@/utils/helpers"
 import { DialogTrigger } from "@radix-ui/react-dialog"
 import { IconPlus } from "@tabler/icons-react"
+import { useMutation } from "@tanstack/react-query"
+import { CreateProduct } from "@/api/products/storeProduct"
+import { toast } from "sonner"
+import { useStore } from "@/context/StoreContext"
+import { UpdateProduct } from "@/api/products/updateProduct"
+import { UpdateAllEndpoints } from "./production-product-dialog"
 
 interface ProductDialogProps {
-    open?: boolean
-    onOpenChange?: (open: boolean) => void
     product?: Product | null
 }
 
-export function ProductDialog({ open, onOpenChange, product }: ProductDialogProps) {
+export function ProductDialog({ product }: ProductDialogProps) {
+    const [open, setOpenChange] = useState<boolean>(false);
+    const { Materials } = useStore();
+
+    console.log("Materials in ProductDialog:", Materials);
+
     const [formData, setFormData] = useState({
         name: "",
         description: "",
@@ -39,13 +47,21 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
 
     useEffect(() => {
         if (product) {
+
+            const payloadCosts = product.additionalCosts?.map(cost => {
+                return {
+                    ...cost,
+                    type: cost.type == String(1) ? "FIXED_VALUE" : "PERCENTAGE"
+                };
+            });
+
             setFormData({
                 name: product.name,
                 description: product.description || "",
                 profitMargin: product.profitMarginPorcent.toString(),
             })
             setProductMaterial(product.billOfMaterials)
-            setAdditionalCosts(product.additionalCosts ?? [])
+            setAdditionalCosts(payloadCosts as unknown as ProductAdditionalCost[])
         } else {
             setFormData({
                 name: "",
@@ -57,9 +73,42 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
         }
     }, [product, open])
 
+
+    const { mutateAsync: createProductFn, isPending: isPendingCreate } = useMutation({
+        mutationFn: CreateProduct,
+        onSuccess(data) {
+            if (data.success) {
+                toast.success(data.message);
+                UpdateAllEndpoints();
+                setOpenChange(false);
+            } else {
+                toast.error(data.message);
+            }
+        },
+        onError(error) {
+            handleApiError(error);
+        }
+    });
+
+    const { mutateAsync: updateProductFn, isPending: isPendingUpdate } = useMutation({
+        mutationFn: UpdateProduct,
+        onSuccess(data) {
+            if (data.success) {
+                toast.success(data.message);
+                UpdateAllEndpoints();
+                setOpenChange(false);
+            } else {
+                toast.error(data.message);
+            }
+        },
+        onError(error) {
+            handleApiError(error);
+        }
+    })
+
     const calculateRecipeCost = () => {
         return productMaterial.reduce((total, item) => {
-            const insumo = item.rawMaterial;
+            const insumo = item.material;
             if (insumo) {
                 return total + insumo.unitCost * item.quantityUsed
             }
@@ -87,8 +136,8 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
     }
 
     const addRecipeItem = () => {
-        if (rawMaterials.length === 0) return
-        setProductMaterial([...productMaterial, { id: Date.now(), productId: Date.now(), quantityUsed: 0, rawMaterialId: Date.now().toString() }])
+        if (Materials?.length === 0) return
+        setProductMaterial([...productMaterial, { id: "", productId: "", quantityUsed: 0, materialId: Date.now().toString() }])
     }
 
     const updateRecipeItem = (index: number, field: keyof ProductMaterial, value: string | number) => {
@@ -99,7 +148,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
 
     const updateRecipeItemId = (index: number, value: string) => {
         const newRecipe = [...productMaterial]
-        newRecipe[index] = { ...newRecipe[index], rawMaterial: rawMaterials.find(x => x.id === value), quantityUsed: 0, id: 0, rawMaterialId: value }
+        newRecipe[index] = { ...newRecipe[index], material: Materials?.find(x => x.id === value), quantityUsed: 0, id: "", materialId: value }
         setProductMaterial(newRecipe)
     }
 
@@ -108,7 +157,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
     }
 
     const addAdditionalCost = () => {
-        setAdditionalCosts([...(additionalCosts ?? []), { id: Date.now(), type: "FIXED_VALUE", value: 0, description: "", productId: 1 }])
+        setAdditionalCosts([...(additionalCosts ?? []), { id: "", type: "FIXED_VALUE", value: 0, description: "", productId: "" }])
     }
 
     const updateAdditionalCost = (index: number, field: keyof ProductAdditionalCost, value: string | number) => {
@@ -121,7 +170,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
         setAdditionalCosts(additionalCosts.filter((_, i) => i !== index))
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
         if (!formData.name || productMaterial.length === 0) {
@@ -140,9 +189,40 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
             sellingPrice,
         }
 
-        console.log(productData)
-        if (onOpenChange) {
-            onOpenChange(false)
+        const payloadCosts = productData.additionalCosts.map(cost => {
+            return {
+                ...cost,
+                type: cost.type === "FIXED_VALUE" ? 1 : 2
+            };
+        });
+
+        if (!product) {
+            try {
+                await createProductFn({
+                    additionalCosts: payloadCosts as unknown as ProductAdditionalCost[],
+                    billOfMaterials: productData.productMaterial,
+                    description: productData.description || "",
+                    name: productData.name,
+                    profitMarginPorcent: productData.profitMargin,
+                    sellingPrice: productData.sellingPrice
+                })
+            } catch (error) {
+                console.error(error)
+            }
+        } else {
+            try {
+                await updateProductFn({
+                    productId: product.id,
+                    additionalCosts: payloadCosts as unknown as ProductAdditionalCost[],
+                    billOfMaterials: productData.productMaterial,
+                    description: productData.description || "",
+                    name: productData.name,
+                    profitMarginPorcent: productData.profitMargin,
+                    sellingPrice: productData.sellingPrice
+                })
+            } catch (error) {
+                console.error(error)
+            }
         }
     }
 
@@ -157,7 +237,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={setOpenChange}>
             <DialogTrigger asChild>
                 {product ? (
                     <Button
@@ -245,30 +325,30 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                                     </p>
                                 ) : (
                                     productMaterial.map((item, index) => {
-                                        const insumo = item.rawMaterial
+                                        const insumo = item.material
                                         const itemCost = insumo ? insumo.unitCost * item.quantityUsed : 0
                                         return (
                                             <div key={index} className="flex gap-2 items-end">
                                                 <div className="flex-1 grid gap-2">
                                                     <Label className="text-xs">Insumo</Label>
                                                     <Select
-                                                        value={item.rawMaterialId}
+                                                        value={item.materialId}
                                                         onValueChange={(value) => updateRecipeItemId(index, value)}
                                                     >
                                                         <SelectTrigger className="min-w-[180px]">
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            {rawMaterials.map((insumo) => (
+                                                            {Materials?.map((insumo) => (
                                                                 <SelectItem key={insumo.id} value={insumo.id}>
-                                                                    {insumo.name} ({formatCurrency(insumo.unitCost)}/{insumo.unitOfMeasure})
+                                                                    {insumo.name} ({formatCurrency(insumo.unitCost)}/{getEnumLabel("UnitOfMeasure", insumo.unitOfMeasure)})
                                                                 </SelectItem>
                                                             ))}
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
                                                 <div className="w-32 grid gap-2">
-                                                    <Label className="text-xs">Quantidade ({item.rawMaterial?.unitOfMeasure})</Label>
+                                                    <Label className="text-xs">Quantidade ({getEnumLabel("UnitOfMeasure", item.material?.unitOfMeasure || "")})</Label>
                                                     <Input
                                                         type="number"
                                                         step="0.01"
@@ -375,7 +455,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                                         type="number"
                                         step="0.1"
                                         min="0"
-                                        value={formData.profitMargin ? Number(formData.profitMargin).toFixed(2) : formData.profitMargin}
+                                        value={formData.profitMargin}
                                         onChange={(e) => setFormData({ ...formData, profitMargin: e.target.value })}
                                     />
                                 </div>
@@ -410,11 +490,20 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                         </Card>
                     </div>
                     <DialogFooter className="mt-4 pt-4 border-t">
-                        <Button type="button" variant="outline">
+                        <Button type="button" variant="outline" onClick={() => setOpenChange(false)}>
                             Cancelar
                         </Button>
-                        <Button type="submit" disabled={!formData.name || productMaterial.length === 0}>
-                            {product ? "Atualizar" : "Cadastrar"}
+                        <Button type="submit" disabled={(!formData.name || productMaterial.length === 0) || isPendingCreate || isPendingUpdate}>
+                            {isPendingUpdate || isPendingCreate ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    {product ? "Atualizando..." : "Cadastrando..."}
+                                </>
+                            ) : (
+                                <>
+                                    {product ? "Atualizar" : "Cadastrar"}
+                                </>
+                            )}
                         </Button>
                     </DialogFooter>
                 </form>
