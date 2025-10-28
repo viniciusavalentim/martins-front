@@ -126,7 +126,7 @@ export type OrderStatus = 'PENDING' | 'IN_PRODUCTION' | 'IN_MATURING' | 'CANCELL
  * Contém os totais e informações do cliente.
  */
 export interface Order {
-    id: number;
+    id: string;
     customerId?: number;
     orderDate: Date;
     totalAmount: number; // Faturamento (RECEITA)

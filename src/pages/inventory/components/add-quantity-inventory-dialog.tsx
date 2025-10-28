@@ -23,7 +23,7 @@ import { UpdateAllEndpoints } from "@/pages/products/components/production-produ
 export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMaterial }) {
     const [open, setOpenChange] = useState<boolean>(false);
     const [quantity, setQuantity] = useState("")
-    const [unitCost, setUnitCost] = useState("")
+    const [totalCostValue, setTotalCostValue] = useState("")
     const [notes, setNotes] = useState("")
 
 
@@ -48,7 +48,7 @@ export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMa
         e.preventDefault()
 
         const quantityNum = Number.parseFloat(quantity)
-        const unitCostNum = Number.parseFloat(unitCost)
+        const unitCostNum = Number.parseFloat(totalCostValue) / quantityNum
 
         if (isNaN(quantityNum) || quantityNum <= 0) {
             toast.error("Quantidade deve ser um número maior que zero");
@@ -79,12 +79,12 @@ export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMa
         }
         setOpenChange(false);
         setQuantity("")
-        setUnitCost("")
+        setTotalCostValue("")
         setNotes("")
     }
 
     const quantityNum = Number.parseFloat(quantity)
-    const unitCostNum = Number.parseFloat(unitCost)
+    const unitCostNum = Number.parseFloat(totalCostValue) / quantityNum
     const totalCost = !isNaN(quantityNum) && !isNaN(unitCostNum) ? quantityNum * unitCostNum : 0
 
     const currentTotalValue = rawMaterial.currentStock * rawMaterial.unitCost
@@ -144,7 +144,9 @@ export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMa
 
                         <div className="space-y-2">
                             <Label htmlFor="unitCost">
-                                Custo Unitário (R$/{getEnumLabel("UnitOfMeasure", rawMaterial.unitOfMeasure)}) <span className="text-destructive">*</span>
+                                Custo Total
+                                {/* (R$/{getEnumLabel("UnitOfMeasure", rawMaterial.unitOfMeasure)}) */}
+                                <span className="text-destructive">*</span>
                             </Label>
                             <Input
                                 id="unitCost"
@@ -152,8 +154,8 @@ export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMa
                                 step="0.01"
                                 min="0.01"
                                 placeholder={`Ex: ${rawMaterial.unitCost.toFixed(2)}`}
-                                value={unitCost}
-                                onChange={(e) => setUnitCost(e.target.value)}
+                                value={totalCostValue}
+                                onChange={(e) => setTotalCostValue(e.target.value)}
                                 required
                             />
                         </div>

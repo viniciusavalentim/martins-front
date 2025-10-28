@@ -127,7 +127,7 @@ export function getEnumLabel(enumType: EnumType, value: number | string): string
         case "UnitOfMeasure":
             switch (value) {
                 case 1: return "g";
-                case 2: return "m";
+                case 2: return "ml";
                 case 3: return "un";
                 default: return "";
             }
@@ -156,7 +156,7 @@ export function getEnumLabel(enumType: EnumType, value: number | string): string
         case "ExpenseCategory":
             switch (value) {
                 case 1: return "Equipamentos";
-                case 2: return "Serviços Públicos";
+                case 2: return "Utilidades";
                 case 3: return "Marketing";
                 case 4: return "Aluguel";
                 case 5: return "Mão de Obra";
@@ -186,6 +186,73 @@ export function getEnumLabel(enumType: EnumType, value: number | string): string
             return "Desconhecido";
     }
 }
+
+export function getEnumEnglishName(enumType: string, value: number | string): string {
+    switch (enumType.toUpperCase()) {
+        // --- Unidade de Medida ---
+        case "UNITOFMEASURE":
+            switch (value) {
+                case 1: return "G";
+                case 2: return "ML";
+                case 3: return "UN";
+                default: return "UNKNOWN";
+            }
+
+        // --- Tipo de Custo ---
+        case "COSTTYPE":
+            switch (value) {
+                case 1: return "FIXED_VALUE";
+                case 2: return "PERCENTAGE";
+                default: return "UNKNOWN";
+            }
+
+        // --- Status do Pedido ---
+        case "ORDERSTATUS":
+            switch (value) {
+                case 1: return "PENDING";
+                case 2: return "IN_PRODUCTION";
+                case 3: return "IN_MATURING";
+                case 4: return "CANCELLED";
+                case 5: return "AWAITING_DELIVERY";
+                case 6: return "COMPLETED";
+                default: return "UNKNOWN";
+            }
+
+        // --- Categoria de Despesa ---
+        case "EXPENSECATEGORY":
+            switch (value) {
+                case 1: return "EQUIPMENT";
+                case 2: return "UTILITIES";
+                case 3: return "MARKETING";
+                case 4: return "RENT";
+                case 5: return "LABOR";
+                case 6: return "OTHER";
+                default: return "UNKNOWN";
+            }
+
+        // --- Tipo de Despesa ---
+        case "EXPENSETYPE":
+            switch (value) {
+                case 1: return "ONE-TIME";
+                case 2: return "RECURRING";
+                default: return "UNKNOWN";
+            }
+
+        // --- Intervalo de Recorrência ---
+        case "RECURRENCEINTERVAL":
+            switch (value) {
+                case 1: return "DAILY";
+                case 2: return "WEEKLY";
+                case 3: return "MONTHLY";
+                case 4: return "YEARLY";
+                default: return "UNKNOWN";
+            }
+
+        default:
+            return "UNKNOWN";
+    }
+}
+
 
 export function getEnumValue(enumType: EnumType, name: string): number {
     switch (enumType) {

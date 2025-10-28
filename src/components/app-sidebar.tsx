@@ -14,7 +14,8 @@ import {
   IconShoppingCart,
   IconListDetails,
   IconBox,
-  IconMoneybag
+  IconMoneybag,
+  IconBuilding
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -56,6 +57,11 @@ const data = {
       title: "Vendas",
       url: "/app/vendas",
       icon: IconShoppingCart,
+    },
+    {
+      title: "Fila de produção",
+      url: "/app/producao",
+      icon: IconBuilding,
     },
     {
       title: "Despesas",

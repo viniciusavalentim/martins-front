@@ -448,7 +448,7 @@ export function DataTable({
     }
   }
 
-  const { mutateAsync: updateStatustFn, isPending: isPendingUpdateStatus } = useMutation({
+  const { mutateAsync: updateStatustFn } = useMutation({
     mutationFn: UpdateSaleStatus,
     onSuccess(data) {
       if (data.success) {

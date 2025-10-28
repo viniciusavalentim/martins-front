@@ -312,10 +312,14 @@ export function ProductDialog({ product }: ProductDialogProps) {
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="text-base">Receita do Produto *</CardTitle>
-                                    <Button type="button" variant="outline" size="sm" onClick={addRecipeItem}>
-                                        <Plus className="h-4 w-4 mr-1" />
-                                        Adicionar Insumo
-                                    </Button>
+                                    {productMaterial.length === 0 && (
+                                        <>
+                                            <Button type="button" variant="outline" size="sm" onClick={addRecipeItem}>
+                                                <Plus className="h-4 w-4 mr-1" />
+                                                Adicionar Insumo
+                                            </Button>
+                                        </>
+                                    )}
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-3">
@@ -368,6 +372,18 @@ export function ProductDialog({ product }: ProductDialogProps) {
                                         )
                                     })
                                 )}
+
+                                {productMaterial.length > 0 && (
+                                    <>
+                                        <div className="py-3  border-t">
+                                            <Button type="button" variant="outline" size="sm" onClick={addRecipeItem}>
+                                                <Plus className="h-4 w-4 mr-1 my-3" />
+                                                Adicionar Insumo
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
+
                                 {productMaterial.length > 0 && (
                                     <div className="pt-2 border-t">
                                         <div className="flex justify-between text-sm font-medium">

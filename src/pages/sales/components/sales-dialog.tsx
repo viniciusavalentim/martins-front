@@ -29,6 +29,7 @@ import { queryClient } from "@/lib/queryClient"
 import { FindCustomers } from "@/api/sales/findCustomers"
 import { CreateSale } from "@/api/sales/createSale"
 import { useStore } from "@/context/StoreContext"
+import { UpdateAllEndpoints } from "@/pages/products/components/production-product-dialog"
 
 interface SaleDialogProps {
 }
@@ -65,19 +66,20 @@ export function SaleDialog({ }: SaleDialogProps) {
         }).format(value)
     }
 
-    const { data: findCustomersQuery, isPending: isPendingCustomer } = useQuery({
+    const { data: findCustomersQuery, isPending: isPendingCustomer, refetch: refetchCustomers } = useQuery({
         queryKey: ["FindCustomersQuery"],
         queryFn: () => FindCustomers({ searchText: "" }),
     });
 
-    const { mutateAsync: createCustomerFn, isPending: isPendingCreateCustomer } = useMutation({
+    const { mutateAsync: createCustomerFn } = useMutation({
         mutationFn: CreateCustomer,
-        onSuccess(data) {
+        async onSuccess(data) {
             if (data.success) {
                 toast.success(data.message);
-                queryClient.invalidateQueries({
-                    queryKey: ["FindCustomersQuery"]
-                });
+                await queryClient.invalidateQueries({ queryKey: ["FindCustomersQuery"] });
+                const newData = await refetchCustomers();
+                const lastCustomer = newData.data?.data?.slice(-1)[0];
+                setCustomerId(lastCustomer?.id || "");
             } else {
                 toast.error(data.message);
             }
@@ -87,7 +89,7 @@ export function SaleDialog({ }: SaleDialogProps) {
         }
     });
 
-    const { mutateAsync: createSaleFn, isPending: isPendingCreateSale } = useMutation({
+    const { mutateAsync: createSaleFn } = useMutation({
         mutationFn: CreateSale,
         onSuccess(data) {
             if (data.success) {
@@ -95,6 +97,7 @@ export function SaleDialog({ }: SaleDialogProps) {
                 queryClient.invalidateQueries({
                     queryKey: ["FindSalesQuery"]
                 });
+                UpdateAllEndpoints();
                 setOpenChange(false);
             } else {
                 toast.error(data.message || "Não foi possível criar o cliente.");

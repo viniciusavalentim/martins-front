@@ -5,7 +5,7 @@ interface CreateExpenseRequest {
     category: number
     amount: number
     type: number
-    recurrenceInterval?: string | null
+    recurrenceInterval?: number | null
     date: string
     notes?: string | null
 }

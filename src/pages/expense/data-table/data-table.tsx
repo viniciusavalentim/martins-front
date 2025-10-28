@@ -74,11 +74,10 @@ import {
   Tabs,
   TabsContent,
 } from "@/components/ui/tabs"
-import { DollarSign, Search, ShoppingBag, User } from "lucide-react"
+import { Search } from "lucide-react"
 import type { OperationalExpense } from "@/utils/models"
-import { formatToBRL, getOrderStatusBadge } from "@/utils/helpers"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@radix-ui/react-separator"
+import { formatToBRL, getEnumLabel } from "@/utils/helpers"
+
 import { ExpenseDialog } from "../components/expense-dialog"
 
 const columnLabels: Record<string, string> = {
@@ -235,12 +234,21 @@ const columns: ColumnDef<OperationalExpense>[] = [
     },
   },
   {
+    accessorKey: "name",
+    header: "Nome",
+    cell: ({ row }) => (
+      <>
+        {row.original.name}
+      </>
+    ),
+  },
+  {
     accessorKey: "category",
     header: "Categoria",
     cell: ({ row }) => (
       <div className="w-32">
         <Badge variant="outline" className="text-muted-foreground px-1.5">
-          {row.original.category}
+          {getEnumLabel("ExpenseCategory", row.original.category)}
         </Badge>
       </div>
     ),
@@ -251,7 +259,7 @@ const columns: ColumnDef<OperationalExpense>[] = [
     cell: ({ row }) => (
       <div className="w-32">
         <Badge variant="outline" className="text-muted-foreground px-1.5">
-          {row.original.type}
+          {getEnumLabel("ExpenseType", row.original.type)}
         </Badge>
       </div>
     ),
@@ -340,6 +348,10 @@ export function DataTable({
     () => data?.map(({ id }) => id) || [],
     [data]
   )
+
+  React.useEffect(() => {
+    setData(initialData)
+  }, [initialData])
 
   const table = useReactTable({
     data,

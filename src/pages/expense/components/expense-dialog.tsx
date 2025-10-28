@@ -19,15 +19,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { OperationalExpense } from "@/utils/models"
 import { Pencil } from "lucide-react"
 import { IconPlus } from "@tabler/icons-react"
+import { useMutation } from "@tanstack/react-query"
+import { CreateExpense } from "@/api/expenses/createExpense"
+import { queryClient } from "@/lib/queryClient"
+import { toast } from "sonner"
+import { getEnumEnglishName, handleApiError } from "@/utils/helpers"
+import { UpdateExpense } from "@/api/expenses/updateExpense"
 
 interface ExpenseDialogProps {
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
   expense?: OperationalExpense
 }
 
-export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProps) {
-
+export function ExpenseDialog({ expense }: ExpenseDialogProps) {
+  const [open, setOpenChange] = useState<boolean>();
   const [name, setName] = useState("")
   const [category, setCategory] = useState<OperationalExpense["category"]>("other")
   const [amount, setAmount] = useState("")
@@ -39,10 +43,10 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
   useEffect(() => {
     if (expense) {
       setName(expense.name)
-      setCategory(expense.category)
+      setCategory(getEnumEnglishName("EXPENSECATEGORY", expense.category).toLowerCase() as OperationalExpense["category"])
       setAmount(expense.amount.toString())
-      setType(expense.type)
-      setRecurrenceInterval(expense.recurrenceInterval || "monthly")
+      setType(getEnumEnglishName("EXPENSETYPE", expense.type).toLowerCase() as "one-time" | "recurring")
+      setRecurrenceInterval(getEnumEnglishName("RECURRENCEINTERVAL", expense.recurrenceInterval || "").toLowerCase() as OperationalExpense["recurrenceInterval"] || "monthly")
       setDate(expense.date.split("T")[0])
       setNotes(expense.notes || "")
     } else {
@@ -56,17 +60,119 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
     }
   }, [expense, open])
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const { mutateAsync: createExpenseFn } = useMutation({
+    mutationFn: CreateExpense,
+    onSuccess(data) {
+      if (data.success) {
+        toast.success(data.message);
+        queryClient.invalidateQueries({
+          queryKey: ["FindExpensesQuery"]
+        });
+        setOpenChange(false);
+      } else {
+        toast.error(data.message || "Não foi possível criar a despesa.");
+      }
+    },
+    onError(error) {
+      handleApiError(error);
+    }
+  });
+
+  const { mutateAsync: UpdateExpenseFn } = useMutation({
+    mutationFn: UpdateExpense,
+    onSuccess(data) {
+      if (data.success) {
+        toast.success(data.message);
+        queryClient.invalidateQueries({
+          queryKey: ["FindExpensesQuery"]
+        });
+        setOpenChange(false);
+      } else {
+        toast.error(data.message || "Não foi possível editar a despesa.");
+      }
+    },
+    onError(error) {
+      handleApiError(error);
+    }
+  });
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const amountNum = Number.parseFloat(amount)
     if (isNaN(amountNum) || amountNum <= 0) {
       return
     }
+
+    if (!expense) {
+      try {
+        await createExpenseFn({
+          amount: amountNum,
+          category: (() => {
+            switch (category) {
+              case "equipment": return 1
+              case "utilities": return 2
+              case "marketing": return 3
+              case "rent": return 4
+              case "labor": return 5
+              case "other": return 6
+              default: return 1
+            }
+          })(),
+          date,
+          name,
+          type: type === "one-time" ? 1 : 2,
+          recurrenceInterval: (() => {
+            switch (recurrenceInterval) {
+              case "daily": return 1
+              case "monthly": return 2
+              case "weekly": return 3
+              case "yearly": return 4
+              default: return 1
+            }
+          })(),
+          notes
+        })
+      } catch (error) {
+        console.error(error)
+      }
+    } else {
+      await UpdateExpenseFn({
+        id: expense.id,
+        amount: amountNum,
+        category: (() => {
+          switch (category) {
+            case "equipment": return 1
+            case "utilities": return 2
+            case "marketing": return 3
+            case "rent": return 4
+            case "labor": return 5
+            case "other": return 6
+            default: return 1
+          }
+        })(),
+        date,
+        name,
+        type: type === "one-time" ? 1 : 2,
+        recurrenceInterval: (() => {
+          switch (recurrenceInterval) {
+            case "daily": return 1
+            case "monthly": return 2
+            case "weekly": return 3
+            case "yearly": return 4
+            default: return 1
+          }
+        })(),
+        notes
+      })
+    }
+
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={setOpenChange}>
       <DialogTrigger asChild>
         {expense ? (
           <Button
