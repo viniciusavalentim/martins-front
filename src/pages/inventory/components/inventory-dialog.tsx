@@ -15,14 +15,14 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { IconPlus } from "@tabler/icons-react"
 import { Loader2, Pencil } from "lucide-react"
-import { getEnumLabel, getEnumValue, handleApiError } from "@/utils/helpers"
+import { formatToBRL, getEnumLabel, getEnumValue, handleApiError } from "@/utils/helpers"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { CreateMaterial } from "@/api/material/storeMaterial"
 import { toast } from "sonner"
 import { EditMaterial } from "@/api/material/updateMaterial"
 import { UpdateAllEndpoints } from "@/pages/products/components/production-product-dialog"
 
-const units: UnitOfMeasure[] = ["g", "ml", "un"]
+const units: UnitOfMeasure[] = ["g", "ml", "un", "cm"]
 
 export function InventoryDialog({ rawMaterial }: { rawMaterial?: RawMaterial | null }) {
     const [open, setOpenChange] = useState<boolean>(false);
@@ -270,10 +270,7 @@ export function InventoryDialog({ rawMaterial }: { rawMaterial?: RawMaterial | n
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm font-medium">Custo por Unidade:</span>
                                     <span className="text-lg font-bold">
-                                        {new Intl.NumberFormat("pt-BR", {
-                                            style: "currency",
-                                            currency: "BRL",
-                                        }).format(costPerUnit)}
+                                        {formatToBRL(rawMaterial ? rawMaterial.unitCost : costPerUnit)}
                                         /{formData.unit}
                                     </span>
                                 </div>

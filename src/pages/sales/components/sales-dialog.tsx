@@ -286,7 +286,7 @@ export function SaleDialog({ }: SaleDialogProps) {
                         <div className="space-y-4 pb-4">
                             {/* Customer Selection */}
                             <Card>
-                                <CardContent className="pt-6 space-y-4">
+                                <CardContent className=" space-y-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="customer">Cliente (Opcional)</Label>
                                         {!showNewCustomer ? (
@@ -375,7 +375,7 @@ export function SaleDialog({ }: SaleDialogProps) {
 
                             {/* Add Product Section */}
                             <Card>
-                                <CardContent className="pt-6 space-y-4">
+                                <CardContent className="space-y-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="product">Adicionar Produto</Label>
                                         <Select value={currentItem.productId} onValueChange={handleProductChange}>

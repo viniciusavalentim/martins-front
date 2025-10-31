@@ -5,12 +5,14 @@ import { DataTable } from "./data-table/data-table";
 import { useStore } from "@/context/StoreContext";
 import { useEffect, useState } from "react";
 import { DataTableSkeleton } from "../inventory";
-import { SaleDialog } from "./components/sales-dialog";
-import { IconMoneybag } from "@tabler/icons-react";
+import { IconMoneybag, IconPlus } from "@tabler/icons-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export function Sales() {
     const { Sales, isPendingSale } = useStore();
     const [summary, setSummary] = useState<MonthlySummary>();
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (Sales) {
@@ -74,7 +76,10 @@ export function Sales() {
                             Cadastre sua primeira venda para começar a gerenciar seus lucros.
                         </p>
                         <div className="mt-6">
-                            <SaleDialog />
+                            <Button variant="default" size="sm" onClick={() => navigate("nova-venda")}>
+                                <IconPlus />
+                                <span className="hidden lg:inline">Nova Venda</span>
+                            </Button>
                         </div>
                     </div>
                 )

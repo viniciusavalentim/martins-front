@@ -74,7 +74,6 @@ import {
 import { Search } from "lucide-react"
 import type { RawMaterial } from "@/utils/models"
 import { formatToBRL, getEnumLabel } from "@/utils/helpers"
-import { AddQuantityInventoryDialog } from "../components/add-quantity-inventory-dialog"
 import { InventoryDialog } from "../components/inventory-dialog"
 
 const columnLabels: Record<string, string> = {
@@ -239,7 +238,7 @@ const columns: ColumnDef<RawMaterial>[] = [
     id: "actions",
     cell: ({ row }) => (
       <>
-        <AddQuantityInventoryDialog rawMaterial={row.original} />
+        {/* <AddQuantityInventoryDialog rawMaterial={row.original} /> */}
         <InventoryDialog rawMaterial={row.original} />
       </>
     ),
@@ -286,7 +285,7 @@ export function DataTableList({
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: 20,
   })
   const sortableId = React.useId()
   const sensors = useSensors(

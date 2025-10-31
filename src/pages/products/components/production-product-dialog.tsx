@@ -104,7 +104,7 @@ export function AddProductionProductDialog({ product }: ProductParams) {
         } catch (error) {
             console.error(error)
         }
-
+        setQuantity("");
     }
 
     return (

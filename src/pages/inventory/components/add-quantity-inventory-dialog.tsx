@@ -20,12 +20,12 @@ import { useMutation } from "@tanstack/react-query"
 import { UpdateMaterialStock } from "@/api/material/updateStock"
 import { UpdateAllEndpoints } from "@/pages/products/components/production-product-dialog"
 
+
 export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMaterial }) {
     const [open, setOpenChange] = useState<boolean>(false);
     const [quantity, setQuantity] = useState("")
     const [totalCostValue, setTotalCostValue] = useState("")
     const [notes, setNotes] = useState("")
-
 
     const { mutateAsync: UpdateStockMaterialFn, isPending } = useMutation({
         mutationFn: UpdateMaterialStock,
@@ -42,7 +42,6 @@ export function AddQuantityInventoryDialog({ rawMaterial }: { rawMaterial: RawMa
             handleApiError(error);
         }
     });
-
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()

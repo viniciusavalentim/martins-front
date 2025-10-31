@@ -8,6 +8,7 @@ const valueSchema = z.number().nullable().optional();
 
 export function formatToBRL(value: unknown): string {
     const parsed = valueSchema.safeParse(value);
+    const MAX_FRACTION_DIGITS = 3;
 
     if (!parsed.success || parsed.data === null || parsed.data === undefined) {
         return "Sem valor";
@@ -16,6 +17,8 @@ export function formatToBRL(value: unknown): string {
     return parsed.data.toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: MAX_FRACTION_DIGITS,
     });
 }
 
@@ -129,6 +132,7 @@ export function getEnumLabel(enumType: EnumType, value: number | string): string
                 case 1: return "g";
                 case 2: return "ml";
                 case 3: return "un";
+                case 4: return "cm";
                 default: return "";
             }
 
@@ -195,6 +199,7 @@ export function getEnumEnglishName(enumType: string, value: number | string): st
                 case 1: return "G";
                 case 2: return "ML";
                 case 3: return "UN";
+                case 4: return "CM";
                 default: return "UNKNOWN";
             }
 
@@ -261,6 +266,7 @@ export function getEnumValue(enumType: EnumType, name: string): number {
                 case "g": return 1
                 case "ml": return 2
                 case "un": return 3
+                case "cm": return 4
                 default: return 0
             }
 

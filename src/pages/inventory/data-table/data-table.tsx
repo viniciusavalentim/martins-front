@@ -189,7 +189,7 @@ const columns: ColumnDef<ReportRawMaterial>[] = [
     header: "Custo/unidade",
     cell: ({ row }) => (
       <>
-        {formatToBRL(row.original.totalCost / row.original.currentStock)}
+        {formatToBRL(row.original.unitCost)}
       </>
     ),
   },

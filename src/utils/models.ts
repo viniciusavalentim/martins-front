@@ -7,7 +7,7 @@
  * Representa a unidade de medida para os insumos.
  * Garante que apenas valores válidos sejam utilizados no sistema.
  */
-export type UnitOfMeasure = 'g' | 'ml' | 'un';
+export type UnitOfMeasure = 'g' | 'ml' | 'un' | 'cm';
 
 /**
  * Representa um fornecedor de matéria-prima.
@@ -137,6 +137,7 @@ export interface Order {
     // Relacionamentos
     customer?: Customer;
     items: OrderItem[]; // Um pedido sempre terá um ou mais itens
+    additionalCosts?: OrderAdditionalCost[];
 }
 
 /**
@@ -160,6 +161,17 @@ export interface OrderItem {
     product?: Product;
 }
 
+export interface OrderAdditionalCost {
+    id: string
+    orderId: string
+    description: string
+    amount: number
+    orderItemId?: string
+    category?: "shipping" | "packaging" | "delivery" | "custom" | "other"
+    quantity?: number
+}
+
+
 export interface OperationalExpense {
     id: string
     name: string
@@ -171,7 +183,6 @@ export interface OperationalExpense {
     notes?: string
     createdAt: string
 }
-
 
 export interface FinancialSummary {
     startDate: Date;
@@ -189,10 +200,22 @@ export interface ProductSale {
     revenue: number;     // receita/faturamento do produto
 }
 
+export interface CardData {
+    changePercentage: number
+    comparisonPeriod: string
+    value: number
+}
+
 export interface DashboardData {
-    totalRevenue: number;            // faturamento total
-    totalOrders: number;             // total de pedidos
-    totalProfit: number;             // lucro total
+    totalRevenue: CardData;            // faturamento total
+    totalOrders: CardData;             // total de pedidos
+    totalProfit: CardData;             // lucro total
+    totalExpense: CardData;
+    topSellingProductsChart: {
+        segments: [
+            { productName: string; quantity: number }
+        ]
+    }[];
     productSales: ProductSale[];     // vendas por produto
     bestSellers: { name: string, quantity: number }[]; // produtos mais vendidos
     sellers: { data: string, quantity: number }[];

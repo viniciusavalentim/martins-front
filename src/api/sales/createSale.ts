@@ -1,10 +1,12 @@
 import api from "@/lib/axios"
+import type { OrderAdditionalCost } from "@/utils/models"
 
 interface CreateSaleRequest {
     customerId?: string | null
     orderStatus: number
     orderItems: OrderItem[]
-    observations?: string
+    observations?: string,
+    additionalCosts?: OrderAdditionalCost[]
 }
 
 interface OrderItem {
@@ -29,13 +31,15 @@ export async function CreateSale({
     customerId,
     orderStatus,
     orderItems,
-    observations
+    observations,
+    additionalCosts
 }: CreateSaleRequest) {
     const response = await api.post<CreateSaleResponse>("/Sale", {
         customerId: customerId ?? null,
         orderStatus,
         orderItems,
-        observations: observations ?? ""
+        observations: observations ?? "",
+        additionalCosts: additionalCosts ?? null
     })
 
     return response.data

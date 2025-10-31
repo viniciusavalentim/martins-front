@@ -25,6 +25,7 @@ import {
   IconChevronsLeft,
   IconChevronsRight,
   IconLayoutColumns,
+  IconPlus,
 } from "@tabler/icons-react"
 import {
   type ColumnDef,
@@ -79,11 +80,11 @@ import type { Order } from "@/utils/models"
 import { formatToBRL, getOrderStatusBadge, handleApiError } from "@/utils/helpers"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@radix-ui/react-separator"
-import { SaleDialog } from "../components/sales-dialog"
 import { useMutation } from "@tanstack/react-query"
 import { UpdateSaleStatus } from "@/api/sales/updateStatus"
 import { queryClient } from "@/lib/queryClient"
 import { toast } from "sonner"
+import { useNavigate } from "react-router-dom"
 
 const columnLabels: Record<string, string> = {
   name: "Nome",
@@ -277,6 +278,7 @@ export function DataTable({
 }) {
   const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
+  const navigate = useNavigate();
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -547,7 +549,11 @@ export function DataTable({
 
           </DropdownMenu>
 
-          <SaleDialog />
+          {/* <SaleDialog /> */}
+          <Button variant="default" size="sm" onClick={() => navigate("nova-venda")}>
+            <IconPlus />
+            <span className="hidden lg:inline">Nova Venda</span>
+          </Button>
         </div>
       </div>
       <TabsContent
