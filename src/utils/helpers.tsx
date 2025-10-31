@@ -99,7 +99,7 @@ export const getOrderStatusBadge = (status: string | number) => {
                     Cancelado
                 </Badge>
             )
-        case "COMPLETEDd":
+        case "COMPLETED":
         case 6:
             return (
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
@@ -152,7 +152,7 @@ export function getEnumLabel(enumType: EnumType, value: number | string): string
                 case 3: return "Em Maturação";
                 case 4: return "Cancelado";
                 case 5: return "Aguardando Entrega";
-                case 6: return "Completo";
+                case 6: return "Concluído";
                 default: return "Desconhecido";
             }
 
