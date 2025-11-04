@@ -112,7 +112,7 @@ export function InventoryDialog({ rawMaterial }: { rawMaterial?: RawMaterial | n
         const quantity = Number.parseFloat(formData.quantity)
         const totalCost = Number.parseFloat(formData.totalCost)
 
-        if (!formData.name || quantity <= 0 || totalCost < 0 || !units) {
+        if (!formData.name || !formData.category || quantity <= 0 || totalCost < 0 || !units) {
             return
         }
 

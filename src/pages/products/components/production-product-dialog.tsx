@@ -148,7 +148,10 @@ export function AddProductionProductDialog({ product }: ProductParams) {
                         {quantity && Number.parseFloat(quantity) > 0 && (
                             <div >
                                 <h4 className="font-medium mb-3">Insumos Necessários:</h4>
-                                <div className="space-y-2">
+                                <div
+                                    className="space-y-2 max-h-60 overflow-y-auto pr-2"
+                                    style={{ maxHeight: '240px' }}
+                                >
                                     {requiredMaterials.map((item, index) => (
                                         <div
                                             key={index}
