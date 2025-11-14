@@ -75,6 +75,7 @@ import { Search } from "lucide-react"
 import type { RawMaterial } from "@/utils/models"
 import { formatToBRL, getEnumLabel } from "@/utils/helpers"
 import { InventoryDialog } from "../components/inventory-dialog"
+import { AddQuantityInventoryDialog } from "../components/add-quantity-inventory-dialog"
 
 const columnLabels: Record<string, string> = {
   name: "Nome",
@@ -238,7 +239,7 @@ const columns: ColumnDef<RawMaterial>[] = [
     id: "actions",
     cell: ({ row }) => (
       <>
-        {/* <AddQuantityInventoryDialog rawMaterial={row.original} /> */}
+        <AddQuantityInventoryDialog rawMaterial={row.original} />
         <InventoryDialog rawMaterial={row.original} />
       </>
     ),
