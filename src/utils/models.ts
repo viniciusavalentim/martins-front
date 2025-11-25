@@ -7,18 +7,18 @@
  * Representa a unidade de medida para os insumos.
  * Garante que apenas valores válidos sejam utilizados no sistema.
  */
-export type UnitOfMeasure = 'g' | 'ml' | 'un' | 'cm';
+export type UnitOfMeasure = "g" | "ml" | "un" | "cm";
 
 /**
  * Representa um fornecedor de matéria-prima.
  */
 export interface Supplier {
-    id: number;
-    name: string;
-    contactName?: string;
-    email?: string;
-    phone?: string;
-    createdAt: Date;
+  id: number;
+  name: string;
+  contactName?: string;
+  email?: string;
+  phone?: string;
+  createdAt: Date;
 }
 
 /**
@@ -26,44 +26,42 @@ export interface Supplier {
  * O coração do controle de estoque.
  */
 export interface RawMaterial {
-    id: string;
-    name: string;
-    category?: string;
-    supplierId?: number;
-    currentStock: number;
-    unitOfMeasure: UnitOfMeasure;
-    totalCost: number;
-    unitCost: number; // Custo por 'g', 'ml' ou 'un'
-    lowStockThreshold?: number; //Alerta de estoque minimo
-    lastUpdatedAt: Date;
-    createdAt?: Date;
+  id: string;
+  name: string;
+  category?: string;
+  supplierId?: number;
+  currentStock: number;
+  unitOfMeasure: UnitOfMeasure;
+  totalCost: number;
+  unitCost: number; // Custo por 'g', 'ml' ou 'un'
+  lowStockThreshold?: number; //Alerta de estoque minimo
+  lastUpdatedAt: Date;
+  createdAt?: Date;
 
-
-    // Relacionamento (opcional, para carregar dados do fornecedor)
-    supplier?: Supplier;
+  // Relacionamento (opcional, para carregar dados do fornecedor)
+  supplier?: Supplier;
 }
-
 
 /**
  * Representa o produto final (a vela) pronto para venda.
  */
 export interface Product {
-    id: string;
-    name: string;
-    description?: string;
-    sellingPrice: number;
-    materialCost: number; // Custo Total de Produção (apenas matéria-prima).
-    totalCost: number; // Custo da matéria-prima + todos os outros custos adicionais em R$.
-    totalAdditionalCosts: number; // Custo adicionais 
-    stockQuantity: number; // quantidade de estoque
-    profit: number; // Lucro em R$
-    profitMarginPorcent: number; //% de lucro
-    stockOnHand: number;
-    createdAt: Date;
+  id: string;
+  name: string;
+  description?: string;
+  sellingPrice: number;
+  materialCost: number; // Custo Total de Produção (apenas matéria-prima).
+  totalCost: number; // Custo da matéria-prima + todos os outros custos adicionais em R$.
+  totalAdditionalCosts: number; // Custo adicionais
+  stockQuantity: number; // quantidade de estoque
+  profit: number; // Lucro em R$
+  profitMarginPorcent: number; //% de lucro
+  stockOnHand: number;
+  createdAt: Date;
 
-    // Relacionamentos (para carregar a composição completa do produto)
-    billOfMaterials: ProductMaterial[];
-    additionalCosts?: ProductAdditionalCost[];
+  // Relacionamentos (para carregar a composição completa do produto)
+  billOfMaterials: ProductMaterial[];
+  additionalCosts?: ProductAdditionalCost[];
 }
 
 /**
@@ -72,33 +70,32 @@ export interface Product {
  * Conecta um Produto a uma Matéria-Prima e especifica a quantidade.
  */
 export interface ProductMaterial {
-    id: string;
-    productId: string;
-    materialId: string;
-    quantityUsed: number;
+  id: string;
+  productId: string;
+  materialId: string;
+  quantityUsed: number;
 
-    // Relacionamento (opcional, para carregar detalhes da matéria-prima)
-    material?: RawMaterial;
+  // Relacionamento (opcional, para carregar detalhes da matéria-prima)
+  material?: RawMaterial;
 }
 
 /**
  * Define o tipo de um custo adicional, se é um valor fixo em R$
  * ou uma porcentagem sobre o preço de venda.
  */
-export type CostType = 'FIXED_VALUE' | 'PERCENTAGE';
+export type CostType = "FIXED_VALUE" | "PERCENTAGE";
 
 /**
  * Representa as regras de custeio e precificação de um produto,
  * como mão de obra, marketing, taxas e a margem de lucro.
  */
 export interface ProductAdditionalCost {
-    id: string;
-    productId: string;
-    description: string;
-    type: CostType;
-    value: number; // Pode ser R$ 5.00 (para FIXED_VALUE) ou 10.00 (para 10% em PERCENTAGE)
+  id: string;
+  productId: string;
+  description: string;
+  type: CostType;
+  value: number; // Pode ser R$ 5.00 (para FIXED_VALUE) ou 10.00 (para 10% em PERCENTAGE)
 }
-
 
 // ============================================================================
 //                             ENTIDADES DE VENDAS
@@ -109,35 +106,41 @@ export interface ProductAdditionalCost {
  * Representa um cliente que realiza uma compra.
  */
 export interface Customer {
-    id: string;
-    name: string;
-    email?: string;
-    phone?: string;
-    createdAt: Date;
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  createdAt: Date;
 }
 
 /**
  * Define os possíveis status de um pedido/venda.
  */
-export type OrderStatus = 'PENDING' | 'IN_PRODUCTION' | 'IN_MATURING' | 'CANCELLED' | 'WAITING_DELIVERY' | 'COMPLETED';
+export type OrderStatus =
+  | "PENDING"
+  | "IN_PRODUCTION"
+  | "IN_MATURING"
+  | "CANCELLED"
+  | "WAITING_DELIVERY"
+  | "COMPLETED";
 
 /**
  * Representa o "cabeçalho" de uma venda ou pedido.
  * Contém os totais e informações do cliente.
  */
 export interface Order {
-    id: string;
-    customerId?: number;
-    orderDate: Date;
-    totalAmount: number; // Faturamento (RECEITA)
-    profit: number; //Lucro em R$
-    totalCost: number; // Essencial para o dashboard de lucratividade
-    status: OrderStatus;
+  id: string;
+  customerId?: number;
+  orderDate: Date;
+  totalAmount: number; // Faturamento (RECEITA)
+  profit: number; //Lucro em R$
+  totalCost: number; // Essencial para o dashboard de lucratividade
+  status: OrderStatus;
 
-    // Relacionamentos
-    customer?: Customer;
-    items: OrderItem[]; // Um pedido sempre terá um ou mais itens
-    additionalCosts?: OrderAdditionalCost[];
+  // Relacionamentos
+  customer?: Customer;
+  items: OrderItem[]; // Um pedido sempre terá um ou mais itens
+  additionalCosts?: OrderAdditionalCost[];
 }
 
 /**
@@ -146,83 +149,86 @@ export interface Order {
  * a precisão do histórico financeiro.
  */
 export interface OrderItem {
-    id: string;
-    name: string;
-    orderId: number;
-    productId: string;
-    quantity: number;
-    totalRevenue: number;
-    expectedProfit: number;
-    realProfit: number;
-    unitPrice: number; // Preço unitário no momento da venda
-    unitCost: number; // Custo unitário no momento da venda
+  id: string;
+  name: string;
+  orderId: number;
+  productId: string;
+  quantity: number;
+  totalRevenue: number;
+  expectedProfit: number;
+  realProfit: number;
+  unitPrice: number; // Preço unitário no momento da venda
+  unitCost: number; // Custo unitário no momento da venda
 
-    // Relacionamento (opcional, para carregar detalhes do produto)
-    product?: Product;
+  // Relacionamento (opcional, para carregar detalhes do produto)
+  product?: Product;
 }
 
 export interface OrderAdditionalCost {
-    id: string
-    orderId: string
-    description: string
-    amount: number
-    orderItemId?: string
-    category?: "shipping" | "packaging" | "delivery" | "custom" | "other"
-    quantity?: number
+  id: string;
+  orderId: string;
+  description: string;
+  amount: number;
+  orderItemId?: string;
+  category?: "shipping" | "packaging" | "delivery" | "custom" | "other";
+  quantity?: number;
 }
 
-
 export interface OperationalExpense {
-    id: string
-    name: string
-    category: "equipment" | "utilities" | "marketing" | "rent" | "labor" | "other"
-    amount: number
-    type: "one-time" | "recurring"
-    recurrenceInterval?: "daily" | "weekly" | "monthly" | "yearly"
-    date: string
-    notes?: string
-    createdAt: string
+  id: string;
+  name: string;
+  category:
+    | "equipment"
+    | "utilities"
+    | "marketing"
+    | "rent"
+    | "labor"
+    | "other";
+  amount: number;
+  type: "one-time" | "recurring";
+  recurrenceInterval?: "daily" | "weekly" | "monthly" | "yearly";
+  date: string;
+  notes?: string;
+  createdAt: string;
+  quantity?: string | null;
+  productId?: string | null;
 }
 
 export interface FinancialSummary {
-    startDate: Date;
-    endDate: Date;
-    totalRevenue: number;
-    totalProfit: number;
-    totalOrders: number;
-    averageMargin: number;
+  startDate: Date;
+  endDate: Date;
+  totalRevenue: number;
+  totalProfit: number;
+  totalOrders: number;
+  averageMargin: number;
 }
 
-
 export interface ProductSale {
-    name: string;
-    profit: number;      // lucro do produto
-    revenue: number;     // receita/faturamento do produto
+  name: string;
+  profit: number; // lucro do produto
+  revenue: number; // receita/faturamento do produto
 }
 
 export interface CardData {
-    changePercentage: number
-    comparisonPeriod: string
-    value: number
+  changePercentage: number;
+  comparisonPeriod: string;
+  value: number;
 }
 
 export interface DashboardData {
-    totalRevenue: CardData;            // faturamento total
-    totalOrders: CardData;             // total de pedidos
-    totalProfit: CardData;             // lucro total
-    totalExpense: CardData;
-    topSellingProductsChart: {
-        segments: [
-            { productName: string; quantity: number }
-        ]
-    }[];
-    productSales: ProductSale[];     // vendas por produto
-    bestSellers: { name: string, quantity: number }[]; // produtos mais vendidos
-    sellers: { data: string, quantity: number }[];
-    startDate: Date;
-    endDate: Date;
+  totalRevenue: CardData; // faturamento total
+  totalOrders: CardData; // total de pedidos
+  totalProfit: CardData; // lucro total
+  totalExpense: CardData;
+  topSellingProductsChart: {
+    segments: [{ productName: string; quantity: number }];
+  }[];
+  productSales: ProductSale[]; // vendas por produto
+  bestSellers: { name: string; quantity: number }[]; // produtos mais vendidos
+  sellers: { data: string; quantity: number }[];
+  startDate: Date;
+  endDate: Date;
 }
-
 
 // ============================================================================
 //                             DTOs (Data Transfer Objects)
@@ -231,61 +237,61 @@ export interface DashboardData {
 // os dados que são transferidos entre o cliente (front-end) e o servidor (back-end),
 // omitindo campos que são gerenciados pelo banco (como 'id' e 'createdAt').
 
-export type CreateProductDTO = Omit<Product, 'id' | 'createdAt'> & {
-    // Ao criar um produto, passamos a receita e os custos juntos
-    billOfMaterials: Omit<ProductMaterial, 'id' | 'productId'>[];
-    additionalCosts: Omit<ProductAdditionalCost, 'id' | 'productId'>[];
+export type CreateProductDTO = Omit<Product, "id" | "createdAt"> & {
+  // Ao criar um produto, passamos a receita e os custos juntos
+  billOfMaterials: Omit<ProductMaterial, "id" | "productId">[];
+  additionalCosts: Omit<ProductAdditionalCost, "id" | "productId">[];
 };
 
-export type CreateOrderDTO = Omit<Order, 'id' | 'orderDate' | 'totalAmount' | 'totalCost' | 'items'> & {
-    items: Omit<OrderItem, 'id' | 'orderId' | 'unitPrice' | 'unitCost'>[];
+export type CreateOrderDTO = Omit<
+  Order,
+  "id" | "orderDate" | "totalAmount" | "totalCost" | "items"
+> & {
+  items: Omit<OrderItem, "id" | "orderId" | "unitPrice" | "unitCost">[];
 };
-
-
 
 export interface ReportRawMaterial {
-    id: string;
-    name: string;
-    category?: string;
-    supplierId?: number;
-    currentStock: number;
-    unitOfMeasure: UnitOfMeasure;
-    totalCost: number;
-    unitCost: number;
-    lowStockThreshold?: number;
-    movementType: "add" | "remove";
-    lastUpdatedAt?: Date;
-    createdAt: string;
-    supplier?: Supplier;
+  id: string;
+  name: string;
+  category?: string;
+  supplierId?: number;
+  currentStock: number;
+  unitOfMeasure: UnitOfMeasure;
+  totalCost: number;
+  unitCost: number;
+  lowStockThreshold?: number;
+  movementType: "add" | "remove";
+  lastUpdatedAt?: Date;
+  createdAt: string;
+  supplier?: Supplier;
 }
 
 export interface ReportProduct {
-    id: string;
-    name: string;
-    description?: string;
-    sellingPrice: number;
-    materialCost: number; // Custo Total de Produção (apenas matéria-prima).
-    totalCost: number; // Custo da matéria-prima + todos os outros custos adicionais em R$.
-    totalAdditionalCosts: number; // Custo adicionais 
-    stockQuantity: number; // quantidade de estoque
-    profit: number; // Lucro em R$
-    profitMarginPorcent: number; //% de lucro
-    stockOnHand: number;
-    movementType: "sell" | "production";
-    createdAt: Date;
+  id: string;
+  name: string;
+  description?: string;
+  sellingPrice: number;
+  materialCost: number; // Custo Total de Produção (apenas matéria-prima).
+  totalCost: number; // Custo da matéria-prima + todos os outros custos adicionais em R$.
+  totalAdditionalCosts: number; // Custo adicionais
+  stockQuantity: number; // quantidade de estoque
+  profit: number; // Lucro em R$
+  profitMarginPorcent: number; //% de lucro
+  stockOnHand: number;
+  movementType: "sell" | "production";
+  createdAt: Date;
 
-
-    // Relacionamentos (para carregar a composição completa do produto)
-    billOfMaterials: ProductMaterial[];
-    additionalCosts?: ProductAdditionalCost[];
+  // Relacionamentos (para carregar a composição completa do produto)
+  billOfMaterials: ProductMaterial[];
+  additionalCosts?: ProductAdditionalCost[];
 }
 
 export interface ReportProductMaterial {
-    id: number;
-    productId: number;
-    rawMaterialId: number;
-    quantityUsed: number;
+  id: number;
+  productId: number;
+  rawMaterialId: number;
+  quantityUsed: number;
 
-    // Relacionamento (opcional, para carregar detalhes da matéria-prima)
-    rawMaterial?: RawMaterial;
+  // Relacionamento (opcional, para carregar detalhes da matéria-prima)
+  rawMaterial?: RawMaterial;
 }

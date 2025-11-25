@@ -115,7 +115,7 @@ export function Production() {
                             .sort((a, b) => new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime())
                             .map((order) => (
                                 <TableRow key={order.id}>
-                                    <TableCell className="font-medium">#{order.id}</TableCell>
+                                    <TableCell className="font-medium">#{order.id.slice(0, 6)}</TableCell>
                                     <TableCell className="text-sm">{formatDate(order.orderDate)}</TableCell>
                                     <TableCell>
                                         <div className="text-sm">{order.customer?.name || "Cliente não informado"}</div>
